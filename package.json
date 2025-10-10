@@ -1,8 +1,8 @@
 {
-  "name": "careerdescription",
+  "name": "goalachievement_workbook",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://careerengineer.github.io/careerdescription",
+  "homepage": "https://careerengineer.github.io/goalachievement_workbook",
   "dependencies": {
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
@@ -41,7 +41,7 @@
   },
   "devDependencies": {
     "autoprefixer": "^10.4.20",
-    "gh-pages": "^6.2.0",
+    "gh-pages": "^6.3.0",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17"
   }
