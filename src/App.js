@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Check, Download, Lock, HelpCircle, Eye, Edit3 } from 'lucide-react';
-import './App.css'; // CSS 파일이 있다면 포함
 
 const GoalAchievementWorkbook = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -16,13 +15,9 @@ const GoalAchievementWorkbook = () => {
   const [finalText, setFinalText] = useState('');
 
   const [basicInfo, setBasicInfo] = useState({
-    date: new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(/\//g, '-').replace(/ /g, '_').replace(':', '-'),
     position: '',
     company: '',
-    experienceTitle: '',
-    experiencePeriod: '',
-    duration: '',
-    relatedCompetency: ''
+    goal: ''
   });
 
   const [answers, setAnswers] = useState({});
@@ -36,120 +31,8 @@ const GoalAchievementWorkbook = () => {
     }
   };
 
-  const handleBasicInfoChange = (field, value) => {
-    setBasicInfo(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleAnswerChange = (id, value) => {
-    setAnswers(prev => ({ ...prev, [id]: value }));
-  };
-
-  const toggleGuide = (id) => {
-    setShowGuide(prev => ({ ...prev, [id]: !prev[id] }));
-  };
-
-  const toggleStepSelection = (stepId) => {
-    setSelectedSteps(prev => 
-      prev.includes(stepId) ? prev.filter(id => id !== stepId) : [...prev, stepId]
-    );
-  };
-
-  const goToNextStep = () => {
-    const steps = currentPhase === 'round1' ? round1Steps : currentPhase === 'round2' ? selectedSteps.map(id => ({id, questions: round2Questions[id]})) : round3Questions;
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(prev => prev + 1);
-    } else if (currentPhase === 'round1') {
-      if (canGoNext()) {
-        setCurrentPhase('evaluation');
-        setCurrentStep(0);
-      }
-    } else if (currentPhase === 'round2') {
-      setCurrentPhase('round3');
-      setCurrentStep(0);
-    } else if (currentPhase === 'round3') {
-      setCurrentPhase('completed');
-      setFinalText(generateFinalText());
-    }
-  };
-
-  const goToPrevStep = () => {
-    if (currentStep > 0) {
-      setCurrentStep(prev => prev - 1);
-    } else if (currentPhase === 'evaluation') {
-      setCurrentPhase('round1');
-      setCurrentStep(round1Steps.length - 1);
-    } else if (currentPhase === 'round2') {
-      setCurrentPhase('evaluation');
-    } else if (currentPhase === 'round3') {
-      setCurrentPhase('round2');
-      setCurrentStep(selectedSteps.length - 1);
-    } else if (currentPhase === 'completed') {
-      setCurrentPhase('round3');
-      setCurrentStep(round3Questions.length - 1);
-    }
-  };
-
-  const canGoNext = () => {
-    if (currentPhase === 'evaluation') return selectedSteps.length > 0;
-    const currentData = currentPhase === 'round1' ? round1Steps[currentStep] : currentPhase === 'round2' ? {questions: round2Questions[selectedSteps[currentStep]]} : {questions: [round3Questions[currentStep]]};
-    if (currentStep === 0 && currentPhase === 'round1') {
-      return Object.values(basicInfo).every(v => v.trim() !== '');
-    }
-    return currentData.questions.every(q => answers[q.id]?.trim() !== '');
-  };
-
-  const progress = () => {
-    if (currentPhase === 'round1') return ((currentStep + 1) / round1Steps.length) * 33;
-    if (currentPhase === 'evaluation') return 33;
-    if (currentPhase === 'round2') return 33 + (((currentStep + 1) / selectedSteps.length) * 33);
-    if (currentPhase === 'round3') return 66 + (((currentStep + 1) / round3Questions.length) * 33);
-    return 100;
-  };
-
-  const getRawAnswersText = () => {
-    let text = '';
-    round1Steps.forEach(step => {
-      if (step.questions) {
-        step.questions.forEach(q => {
-          if (answers[q.id]) text += `${q.label}: ${answers[q.id]}\n\n`;
-        });
-      }
-    });
-    selectedSteps.forEach(stepId => {
-      round2Questions[stepId].forEach(q => {
-        if (answers[q.id]) text += `${q.label}: ${answers[q.id]}\n\n`;
-      });
-    });
-    round3Questions.forEach(q => {
-      if (answers[q.id]) text += `${q.label}: ${answers[q.id]}\n\n`;
-    });
-    return text;
-  };
-
-  const generateFinalText = () => {
-    let text = '[최종 목표달성 작성]\n\n';
-    text += answers['q1_1_1'] + '\n' + answers['q1_1_2'] + '\n' + (answers['connect_1_2'] || '') + '\n\n';
-    text += answers['q1_2_1'] + '\n' + (answers['connect_2_3'] || '') + '\n' + answers['q1_3_1'] + '\n\n';
-    text += (answers['connect_3_4'] || '') + '\n' + answers['q1_4_1'] + '\n\n';
-    text += (answers['connect_4_5'] || '') + '\n' + answers['q1_5_1'] + '\n' + (answers['connect_5_6'] || '') + '\n' + answers['q1_6_1'] + '\n';
-    return text;
-  };
-
-  const downloadFinalText = () => {
-    const blob = new Blob([finalText], { type: 'application/msword' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${basicInfo.company || '회사'}_목표달성_${new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(/\//g, '-').replace(/ /g, '_').replace(':', '-')}.doc`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setDownloadSuccess(true);
-    setTimeout(() => setDownloadSuccess(false), 5000);
-  };
-
   const round1Steps = [
-    { id: 0, title: '기본 정보 입력', subtitle: '워크북 작성 정보를 입력하세요' },
+    { id: 0, title: '기본 정보 입력', subtitle: '지원 직무, 회사명, 목표를 입력하세요' },
     {
       id: 1,
       title: 'STEP 1: 목표 설정 동기',
@@ -159,190 +42,120 @@ const GoalAchievementWorkbook = () => {
           id: 'q1_1_1',
           label: 'Q1.1.1. 이 목표를 설정하게 된 구체적인 계기는 무엇인가요?',
           hint: '언제, 어디서, 무엇 때문에 이 목표를 세웠는지 구체적으로',
-          placeholder: '예: 2023년 9월, 전공 수업에서 데이터 분석 과제를 하다가 제 실력의 한계를 느꼈습니다...',
-          rows: 4,
-          guide: {
-            description: '답변 가이드: 구체적인 날짜, 상황, 감정을 포함한 계기 설명',
-            diagnosis: '즉석자가진단: “그 순간 무슨 생각이 들었나요?”라고 물으면 즉답 가능한가?',
-            helpQuestions: [
-              '그날의 구체적 상황은 어떠셨나요?',
-              '어떤 감정을 느끼셨나요?',
-              '왜 그때 행동하기로 결정하셨나요?'
-            ],
-            ifDifficult: '그 당시 어떤 문제나 아쉬움이 있으셨나요? 누군가의 영향을 받으셨나요? 특별한 사건이나 경험이 있으셨나요?',
-            ifStillDifficult: '“2023년 3월, 동기들이 토익 900점을 달성하는 것을 보고 경쟁심과 자신감이 생겼습니다”처럼 시간, 장소, 감정을 구체적으로 표현하세요.',
-            example: '2023년 9월, 전공 수업에서 데이터 분석 과제를 하다가 제 실력의 한계를 절실히 느꼈습니다. 다른 학생들은 Python으로 쉽게 처리했지만 저는 Excel로만 겨우 해내는 상황이 답답했고, 이대로는 취업 경쟁력이 없다는 위기감이 들어 목표를 세웠습니다.'
-          }
+          placeholder: '예: 2023년 9월, 전공 수업에서 데이터 분석 과제를 하다가 제 실력의 한계를 절실히 느꼈습니다...',
+          rows: 4
         },
         {
           id: 'q1_1_2',
           label: 'Q1.1.2. 이 목표가 본인에게 왜 중요했나요?',
-          hint: '개인적 의미와 가치, 달성 시 변화 기대를 구체적으로',
-          placeholder: '예: 이 목표는 제 커리어 방향성을 결정짓는 전환점이었습니다...',
-          rows: 3,
-          guide: {
-            description: '답변 가이드: 개인적 동기와 직무 연관성 강조',
-            diagnosis: '즉석자가진단: “달성하지 못했다면 어떤 영향이 있었을까요?”',
-            helpQuestions: [
-              '개인적으로 어떤 변화를 원하셨나요?',
-              '주변 사람들과 비교했을 때 어떠셨나요?',
-              '미래 계획과 어떤 연관이 있으셨나요?'
-            ],
-            ifDifficult: '달성하지 못했을 때 어떤 기분이었을까요? 달성하면 무엇이 달라질 것 같았나요?',
-            ifStillDifficult: '“취업 경쟁력 확보”, “자신감 회복” 등 실질적인 이유를 구체적으로 제시하세요.',
-            example: '이 목표는 제 커리어 방향성을 결정짓는 전환점이었습니다. 데이터 분석 역량 없이는 원하는 마케팅 직무에 도전할 수 없었고, 동기들과의 경쟁에서 뒤처질 위기감이 들었기 때문에 꼭 필요했습니다.'
-          }
-        },
-        {
-          id: 'q1_1_3',
-          label: 'Q1.1.3. 이 목표가 없었다면 어떻게 되었을까요?',
-          hint: '대안적 시나리오와 목표의 필연성',
-          placeholder: '예: 아마도 현재 직무 경쟁력 확보에 어려움을 겪었을 것입니다...',
-          rows: 3,
-          guide: {
-            description: '답변 가이드: 목표 없었을 경우의 대안과 현재와의 차이 설명',
-            diagnosis: '즉석자가진단: “다른 길을 생각해봤나요?”',
-            helpQuestions: [
-              '다른 진로를 고려했었나요?',
-              '그 계기가 왜 결정적이었나요?',
-              '다른 가능성과 비교했을 때 이 길을 선택한 이유는?'
-            ],
-            ifDifficult: '이전에 막연히 생각했던 진로를 떠올려보세요.',
-            ifStillDifficult: '주변 친구들이 선택한 일반적인 진로를 상상해보세요.',
-            example: '이 목표가 없었다면 아마도 현재 직무 경쟁력 확보에 어려움을 겪었을 것입니다. 데이터 분석 능력 없이 마케팅 직무에 지원하려면 기본적인 기술적 자격이 부족했을 것이고, 단순 사무직으로 전환했을 가능성이 높았습니다.'
-          }
+          hint: '개인적 의미와 가치, 달성했을 때의 변화 기대를 구체적으로',
+          placeholder: '예: 취업 경쟁력 확보, 자신감 회복, 전문성 입증 등 실질적이고 측정 가능한 이유...',
+          rows: 3
         }
       ]
     },
     {
       id: 2,
       title: 'STEP 2: 구체적 목표와 계획',
-      subtitle: '구체적인 목표와 실행 계획 수립',
+      subtitle: '구체적 목표와 이를 달성하기 위한 계획',
       questions: [
         {
           id: 'q1_2_1',
-          label: 'Q1.2.1. 설정한 구체적 목표는 무엇인가요? (SMART 원칙)',
-          hint: '측정 가능하고 구체적인 목표',
-          placeholder: '예: 6개월 안에 Python으로 데이터 분석 프로젝트 3개 완성...',
-          rows: 4,
-          guide: {
-            description: '답변 가이드: SMART(구체적, 측정 가능, 달성 가능, 관련성, 시간 제한) 원칙 적용',
-            diagnosis: '즉석자가진단: “그 성과를 어떻게 증명할 수 있나요?”',
-            helpQuestions: [
-              '달성 여부를 어떻게 판단할 건가요?',
-              '구체적인 수치나 기준이 있나요?',
-              '언제까지 달성하려고 했나요?'
-            ],
-            ifDifficult: '“실력 향상” 대신 “프로젝트 3개 완성”처럼 측정 가능하게 설정하세요.',
-            ifStillDifficult: '예: “3개월 내 토익 850점 달성”, “6개월 내 포트폴리오 구축”처럼 구체화하세요.',
-            example: '저는 6개월 안에 Python 데이터 분석 전문가가 되기 위해 SMART 원칙을 적용한 목표를 세웠습니다. 구체적으로, 1) Pandas와 NumPy로 데이터 전처리 마스터, 2) 머신러닝 기초 알고리즘 5개 구현, 3) 실제 데이터셋으로 프로젝트 3개 완성 및 GitHub 업로드입니다.'
-          }
+          label: 'Q1.2.1. 설정한 목표를 구체적으로 설명해주세요. (SMART 원칙 적용)',
+          hint: '측정 가능하고 검증 가능한 목표',
+          placeholder: '예: Python 마스터 목표를 세우고, 6개월간 계획을 세웠습니다...',
+          rows: 3
         },
         {
           id: 'q1_2_2',
-          label: 'Q1.2.2. 목표 달성을 위한 세부 계획은 무엇인가요?',
-          hint: '단계별 실행 일정',
-          placeholder: '예: 1개월: 기초 학습, 2-3개월: 프로젝트 시작...',
-          rows: 4,
-          guide: {
-            description: '답변 가이드: 단계별 시간표와 자원 계획',
-            diagnosis: '즉석자가진단: “첫 달에 뭘 했나요?”',
-            helpQuestions: [
-              '첫 달에는 무엇을 했나요?',
-              '중간 점검은 어떻게 했나요?',
-              '주간/일일 계획이 있었나요?'
-            ],
-            ifDifficult: '1개월 단위로 나눠보세요 (예: 학습, 실행, 마무리).',
-            ifStillDifficult: '하루 1-2시간 투자 계획부터 시작하세요.',
-            example: '저는 6개월 계획을 세웠습니다. 1-2개월: Python 기초 문법과 Pandas 학습, 3-4개월: 실제 데이터셋으로 프로젝트 2개 완성, 5-6개월: 최종 프로젝트 마무리와 GitHub 업로드, 주 1회 진도 점검을 포함했습니다.'
-          }
+          label: 'Q1.2.2. 이를 달성하기 위한 세부 계획은 무엇이었나요?',
+          hint: '구체적 실행 계획과 단계',
+          placeholder: '예: 매일 2시간씩 공부, 주 1회 프로젝트 적용 등...',
+          rows: 3
         }
       ]
     },
     {
       id: 3,
       title: 'STEP 3: 실행과 어려움',
-      subtitle: '실행 과정과 직면한 어려움',
+      subtitle: '실행 과정에서 만난 어려움',
       questions: [
         {
           id: 'q1_3_1',
-          label: 'Q1.3.1. 실행 과정에서 겪은 가장 큰 어려움은 무엇인가요?',
-          hint: '구체적인 상황과 어려움',
-          placeholder: '예: 시간 부족과 이해 부족이 가장 큰 어려움이었습니다...',
-          rows: 4,
-          guide: {
-            description: '답변 가이드: 구체적인 상황과 어려움 설명',
-            diagnosis: '즉석자가진단: “가장 포기하고 싶었던 순간은 언제였나요?”',
-            helpQuestions: [
-              '어떤 부분이 가장 어려웠나요?',
-              '포기하고 싶었던 순간은 언제였나요?',
-              '계획대로 안 된 이유는 무엇인가요?'
-            ],
-            ifDifficult: '시간, 기술, 동기 부여 중 무엇이 문제였나요?',
-            ifStillDifficult: '“시간 부족”이나 “기초 부족”처럼 일반적인 어려움부터 구체화하세요.',
-            example: '가장 큰 어려움은 예상보다 높은 학습 곡선이었습니다. 객체지향 프로그래밍을 이해하는 데 3주가 걸렸고, 매일 4시간 투자했음에도 진도가 더뎌 좌절감이 컸습니다.'
-          }
+          label: 'Q1.3.1. 실행 과정에서 어떤 어려움을 겪었나요?',
+          hint: '시간, 장소, 상황의 디테일',
+          placeholder: '예: 실행 중 예상치 못한 장애물...',
+          rows: 3
         },
         {
           id: 'q1_3_2',
-          label: 'Q1.3.2. 어려움을 극복하기 위해 시도한 방법은 무엇인가요?',
-          hint: '다양한 시도와 해결 과정',
-          placeholder: '예: 스터디 그룹을 만들어 함께 학습했습니다...',
-          rows: 4,
-          guide: {
-            description: '답변 가이드: 시도한 방법과 효과 설명',
-            diagnosis: '즉석자가진단: “왜 그 방법이 효과적이었나요?”',
-            helpQuestions: [
-              '어떤 방법을 시도했나요?',
-              '그 방법이 왜 효과적이었나요?',
-              '도움을 요청한 적이 있나요?'
-            ],
-            ifDifficult: '혼자 해결하려 했나요? 외부 도움을 받았나요?',
-            ifStillDifficult: '온라인 자료나 친구의 도움을 구한 경험을 떠올리세요.',
-            example: '처음엔 유튜브 강의를 보며 독학했지만 한계가 있어 온라인 스터디를 구성해 주 2회 코드 리뷰를 했습니다. 또한 Stack Overflow에 질문을 올려 문제를 해결했습니다.'
-          }
+          label: 'Q1.3.2. 그 어려움은 어떻게 느껴졌나요?',
+          hint: '내면의 변화와 깨달음',
+          placeholder: '예: 포기하고 싶었던 순간...',
+          rows: 3
         }
       ]
     },
     {
       id: 4,
       title: 'STEP 4: 문제해결과 혁신',
-      subtitle: '문제를 해결한 창의적 방법',
+      subtitle: '어려움을 극복한 혁신적 해결 과정',
       questions: [
         {
           id: 'q1_4_1',
-          label: 'Q1.4.1. 어려움을 극복한 창의적 방법은 무엇인가요?',
-          hint: '독창적인 해결책',
-          placeholder: '예: 동료와 협력해 새로운 학습 방법을 개발했습니다...',
-          rows: 4
+          label: 'Q1.4.1. 어려움을 어떻게 해결했나요?',
+          hint: '시간 순서대로 해결 과정',
+          placeholder: '예: 창의적 접근법으로 극복...',
+          rows: 3
+        },
+        {
+          id: 'q1_4_2',
+          label: 'Q1.4.2. 그 해결책의 차별화 포인트는?',
+          hint: '가장 열심히 한 활동과 그 성과',
+          placeholder: '예: 남들과 다른 독특한 방법...',
+          rows: 3
         }
       ]
     },
     {
       id: 5,
       title: 'STEP 5: 결과와 성과',
-      subtitle: '달성한 결과와 성과',
+      subtitle: '달성한 결과와 구체적 성과',
       questions: [
         {
           id: 'q1_5_1',
-          label: 'Q1.5.1. 최종 결과와 성과는 무엇인가요?',
-          hint: '구체적 숫자와 증거',
-          placeholder: '예: 3개월 만에 프로젝트 3개 완성...',
-          rows: 4
+          label: 'Q1.5.1. 최종 결과는 어땠나요?',
+          hint: '구체적인 사실과 숫자 포함',
+          placeholder: '예: 목표 달성 여부와 성과 지표...',
+          rows: 3
+        },
+        {
+          id: 'q1_5_2',
+          label: 'Q1.5.2. 그 성과의 의미는?',
+          hint: '첫 인상과 끌린 이유',
+          placeholder: '예: 단순 결과 이상의 가치...',
+          rows: 3
         }
       ]
     },
     {
       id: 6,
       title: 'STEP 6: 배운 점과 적용',
-      subtitle: '경험에서 얻은 교훈',
+      subtitle: '경험에서 얻은 교훈과 적용',
       questions: [
         {
           id: 'q1_6_1',
-          label: 'Q1.6.1. 이 경험에서 얻은 가장 큰 교훈은 무엇인가요?',
-          hint: '구체적 학습 포인트',
-          placeholder: '예: 체계적 계획의 중요성을 배웠습니다...',
-          rows: 4
+          label: 'Q1.6.1. 이 경험에서 얻은 가장 큰 교훈은?',
+          hint: '보유 교훈과 증명 가능한 경험',
+          placeholder: '예: 구체적 학습과 미래 적용...',
+          rows: 3
+        },
+        {
+          id: 'q1_6_2',
+          label: 'Q1.6.2. 이를 어떻게 적용할 건가요?',
+          hint: '구체적 프로젝트나 성과',
+          placeholder: '예: 직무에 적용할 방안...',
+          rows: 3
         }
       ]
     }
@@ -352,41 +165,335 @@ const GoalAchievementWorkbook = () => {
     1: [
       {
         id: 'q2_1_1',
-        label: 'Q2.1.1. 그 순간의 감정과 생각을 더 자세히 설명한다면?',
-        hint: '구체적 상황과 내면 변화',
+        label: 'Q2.1.1. Q1.1.1(이 목표를 설정하게 된 구체적인 계기는 무엇인가요?)의 계기를 더 구체적으로 묘사해주세요',
+        hint: '그 순간의 디테일한 상황과 감정을 생생하게 표현',
         guide: {
-          description: '구체화 포인트: 날짜, 환경, 감정',
-          diagnosis: '즉석자가진단: “그때 무슨 생각이 들었나요?”',
-          helpQuestions: ['그날의 분위기는 어땠나요?', '어떤 사람이 영향을 주었나요?', '구체적인 생각은?'],
-          ifDifficult: '사진이나 메모를 떠올려보세요.',
-          example: '2023년 9월, 도서관에서 과제를 하던 중 좌절감이 들었습니다.'
+          description: '답변 가이드: 그 순간의 디테일한 상황과 감정을 생생하게 표현',
+          diagnosis: '즉석자가진단: "그때 무슨 생각이 들었어요?"라고 물으면 즉답 가능한가?',
+          helpQuestions: [
+            '그날의 날씨, 분위기, 주변 상황은?',
+            '함께 있던 사람들의 반응은?',
+            '그 순간 들었던 구체적인 생각은?'
+          ],
+          ifDifficult: '그때 찍은 사진이나 메모를 찾아보세요. SNS나 일기에 기록이 있는지 확인해보거나 함께했던 사람에게 물어보세요.',
+          ifStillDifficult: '계절이라도 기억해보세요. "여름이었고 더웠다", "기말고사 직후였다" 같은 시기적 배경이라도 추가하면 진정성이 높아집니다.',
+          example: '2023년 9월, 전공 수업에서 데이터 분석 과제를 하다가 제 실력의 한계를 절실히 느꼈습니다. 다른 학생들은 Python으로 쉽게 처리하는 것을 저는 Excel로만 겨우 해내는 상황이 너무 답답했고, 이대로는 취업 경쟁력이 없다는 위기감이 들어 Python 마스터라는 목표를 세우게 되었습니다.'
         },
+        placeholder: '예: 2023년 9월, 전공 수업에서 데이터 분석 과제를 하다가...',
         rows: 4
       },
       {
         id: 'q2_1_2',
-        label: 'Q2.1.2. 이 목표가 없었다면 어떻게 되었을까요?',
-        hint: '대안적 시나리오',
+        label: 'Q2.1.2. 그 계기 이전과 이후, 당신은 어떻게 달라졌나요?',
+        hint: '변화의 구체적인 before & after 비교',
         guide: {
-          description: '답변 가이드: 목표 없었을 경우의 결과',
-          diagnosis: '즉석자가진단: “다른 선택지는 없었나요?”',
-          helpQuestions: ['다른 진로를 생각했나요?', '왜 이 목표가 필수였나요?'],
-          example: '아마도 사무직으로 전환했을 것입니다.'
+          description: '답변 가이드: 변화의 구체적인 before & after 비교',
+          diagnosis: '즉석자가진단: "구체적으로 뭐가 달라졌어요?"라고 물으면 3가지 이상 답변 가능한가?',
+          helpQuestions: [
+            '일상의 관심사가 어떻게 바뀌었나요?',
+            '시간을 쓰는 방식이 어떻게 변했나요?',
+            '미래 계획이 어떻게 수정되었나요?'
+          ],
+          ifDifficult: 'SNS 피드나 유튜브 알고리즘이 어떻게 바뀌었는지 생각해보세요.',
+          ifStillDifficult: '최소한 검색 기록이 바뀌었을 것입니다. 작은 변화라도 구체적으로 적어보세요.',
+          example: '이전에는 Excel로만 겨우 해내는 상황이었지만, 이후에는 매일 2시간씩 Python을 공부하기 시작했습니다.'
         },
+        placeholder: '예: 이전에는 Excel로만...',
+        rows: 4
+      },
+      {
+        id: 'q2_1_3',
+        label: 'Q2.1.3. 만약 그 계기가 없었다면 지금 무엇을 하고 있을까요?',
+        hint: '계기의 결정적 중요성을 역설적으로 강조',
+        guide: {
+          description: '답변 가이드: 계기의 결정적 중요성을 역설적으로 강조',
+          diagnosis: '즉석자가진단: "다른 목표를 생각해본 적 있어요?"라고 물으면 답변 가능한가?',
+          helpQuestions: [
+            '다른 목표를 고려했었나요?',
+            '그 계기가 왜 결정적이었나요?',
+            '다른 가능성과 비교했을 때 이 길을 선택한 이유는?'
+          ],
+          ifDifficult: '이전에 막연히 생각했던 목표를 떠올려보세요.',
+          ifStillDifficult: '주변 친구들이 선택한 일반적인 목표를 생각해보세요.',
+          example: '아마 취업 경쟁력이 없다는 위기감 없이 그대로 있었을 것입니다.'
+        },
+        placeholder: '예: 아마 취업 경쟁력이...',
         rows: 4
       }
     ],
     2: [
       {
         id: 'q2_2_1',
-        label: 'Q2.2.1. 계획 수립 시 고민했던 대안은 무엇이었나요?',
-        hint: '다른 옵션과 선택 이유',
+        label: 'Q2.2.1. Q1.2.1(설정한 목표를 구체적으로 설명해주세요. (SMART 원칙 적용))의 계획 중 가장 도전적이었던 것을 자세히 설명해주세요',
+        hint: '어려움과 극복 과정을 구체적으로 서술',
         guide: {
-          description: '구체화 포인트: 대안과 선택 기준',
-          diagnosis: '즉석자가진단: “왜 그 계획을 택했나요?”',
-          helpQuestions: ['다른 방법은 없었나요?', '어떤 기준으로 선택했나요?'],
-          example: '혼자 공부할까 고민했지만 팀 학습이 더 효과적일 것 같아 선택했습니다.'
+          description: '답변 가이드: 어려움과 극복 과정을 구체적으로 서술',
+          diagnosis: '즉석자가진단: "왜 그게 어려웠어요?"라고 물으면 상세 설명 가능한가?',
+          helpQuestions: [
+            '어떤 점이 가장 어려웠나요?',
+            '포기하고 싶었던 순간은?',
+            '어떻게 극복했나요?'
+          ],
+          ifDifficult: '실패했던 경험도 의미가 있습니다.',
+          ifStillDifficult: '처음 해본 것은 모두 도전입니다.',
+          example: '가장 어려웠던 건 계획 실행이었습니다.'
         },
+        placeholder: '예: 가장 어려웠던 건...',
+        rows: 4
+      },
+      {
+        id: 'q2_2_2',
+        label: 'Q2.2.2. 그 계획을 통해 얻은 구체적인 결과물은 무엇인가요?',
+        hint: '측정 가능하고 검증 가능한 구체적 성과',
+        guide: {
+          description: '답변 가이드: 측정 가능하고 검증 가능한 구체적 성과',
+          diagnosis: '즉석자가진단: "그 성과를 어떻게 증명할 수 있어요?"',
+          helpQuestions: [
+            '만든 포트폴리오나 프로젝트가 있나요?',
+            '받은 인정이나 피드백은?',
+            '수치로 표현할 수 있는 성과는?'
+          ],
+          ifDifficult: '작은 성과도 의미가 있습니다.',
+          ifStillDifficult: '학습 기록이나 노트도 결과물입니다.',
+          example: '6개월간의 탐구로 구체적인 결과물을 만들었습니다.'
+        },
+        placeholder: '예: 6개월간의 탐구로...',
+        rows: 4
+      },
+      {
+        id: 'q2_2_3',
+        label: 'Q2.2.3. 이 과정에서 실패하거나 시행착오를 겪은 경험은?',
+        hint: '실패와 극복이 성장의 증거',
+        guide: {
+          description: '답변 가이드: 실패와 극복이 성장의 증거',
+          diagnosis: '즉석자가진단: "그 실패에서 뭘 배웠어요?"',
+          helpQuestions: [
+            '예상과 다르게 진행된 부분은?',
+            '실패의 원인은 무엇이었나요?',
+            '그 실패를 어떻게 극복했나요?'
+          ],
+          ifDifficult: '모든 새로운 도전에는 시행착오가 따릅니다.',
+          ifStillDifficult: '작은 실수도 의미가 있습니다.',
+          example: '초반에는 무작정 계획만 세우다가 실패했습니다.'
+        },
+        placeholder: '예: 초반에는...',
+        rows: 4
+      }
+    ],
+    3: [
+      {
+        id: 'q2_3_1',
+        label: 'Q2.3.1. 이 실행의 하루 일과를 상상해서 설명해주세요',
+        hint: '현실적이고 구체적인 실행 일과 묘사',
+        guide: {
+          description: '답변 가이드: 현실적이고 구체적인 실행 일과 묘사',
+          diagnosis: '즉석자가진단: "그 중 가장 어려운 부분은 뭘까요?"',
+          helpQuestions: [
+            '오전에는 주로 무슨 실행을?',
+            '협업은 누구와 어떻게?',
+            '가장 시간이 많이 걸리는 실행은?'
+          ],
+          ifDifficult: '실전 가이드나 참고자료를 확인하세요.',
+          ifStillDifficult: '일반적인 실행 흐름이라도 구체화하세요.',
+          example: '오전 9시, 전날 실행 성과를 확인하며 하루를 시작합니다.'
+        },
+        placeholder: '예: 오전 9시...',
+        rows: 4
+      },
+      {
+        id: 'q2_3_2',
+        label: 'Q2.3.2. 이 실행에 필요한 핵심 역량 3가지와 본인의 수준은?',
+        hint: '객관적 자기 평가와 발전 가능성',
+        guide: {
+          description: '답변 가이드: 객관적 자기 평가와 발전 가능성',
+          diagnosis: '즉석자가진단: "그 역량을 어떻게 키울 건가요?"',
+          helpQuestions: [
+            '필수 역량 top 3는?',
+            '각각의 현재 수준은?',
+            '부족한 부분을 어떻게 채울 것인가?'
+          ],
+          ifDifficult: '참고자료나 직무 소개서를 참고하세요.',
+          ifStillDifficult: '일반적인 역량이라도 솔직하게 평가하세요.',
+          example: '핵심 역량 3가지는 실행력, 문제해결력, 지속성입니다.'
+        },
+        placeholder: '예: 핵심 역량 3가지는...',
+        rows: 4
+      },
+      {
+        id: 'q2_3_3',
+        label: 'Q2.3.3. 부족한 역량을 채우기 위한 구체적 계획은?',
+        hint: '우선순위가 명확하고 실행 가능한 계획',
+        guide: {
+          description: '답변 가이드: 우선순위가 명확하고 실행 가능한 계획',
+          diagnosis: '즉석자가진단: "첫 달에는 뭘 할 건가요?"',
+          helpQuestions: [
+            '우선순위를 정한다면?',
+            '각각 언제까지, 어떻게?',
+            '이미 시작한 것이 있다면?'
+          ],
+          ifDifficult: '온라인 강의, 자격증, 독서, 스터디 등을 떠올려보세요.',
+          ifStillDifficult: '달성 후 배울 수 있는 것과 지금 준비할 수 있는 것을 구분하세요.',
+          example: '우선 실행력 강화를 위해 현재 계획을 수강 중입니다.'
+        },
+        placeholder: '예: 우선 실행력...',
+        rows: 4
+      }
+    ],
+    4: [
+      {
+        id: 'q2_4_1',
+        label: 'Q2.4.1. 이 해결의 최근 1년 주요 뉴스나 변화는?',
+        hint: '구체적인 사실과 날짜, 내용 포함',
+        guide: {
+          description: '답변 가이드: 구체적인 사실과 날짜, 내용 포함',
+          diagnosis: '즉석자가진단: "그게 왜 중요한가요?"',
+          helpQuestions: [
+            '신규 해결이나 사업 확장은?',
+            '조직 문화나 제도의 변화는?',
+            '업계에서의 포지션 변화는?'
+          ],
+          ifDifficult: '참고자료를 확인하세요.',
+          ifStillDifficult: '기본적인 정보이라도 구체화하세요.',
+          example: '지난 2024년 11월, 해결을 공식 발표했습니다.'
+        },
+        placeholder: '예: 지난 2024년 11월...',
+        rows: 4
+      },
+      {
+        id: 'q2_4_2',
+        label: 'Q2.4.2. 이 해결만의 독특한 문화나 가치는 무엇인가요?',
+        hint: '다른 것과 차별화되는 점',
+        guide: {
+          description: '답변 가이드: 다른 것과 차별화되는 점',
+          diagnosis: '즉석자가진단: "왜 그게 당신에게 중요해요?"',
+          helpQuestions: [
+            '핵심 가치는?',
+            '업무 방식의 특징은?',
+            '조직 문화의 차별점은?'
+          ],
+          ifDifficult: '참고자료의 "About Us"를 확인하세요.',
+          ifStillDifficult: '일반적인 키워드라도 연결하세요.',
+          example: '혁신적 문제해결을 핵심 가치로 삼고 있습니다.'
+        },
+        placeholder: '예: 혁신적 문제해결을...',
+        rows: 4
+      },
+      {
+        id: 'q2_4_3',
+        label: 'Q2.4.3. 이 해결이 직면한 도전 과제와 기회는?',
+        hint: '트렌드와 연결한 통찰력 있는 분석',
+        guide: {
+          description: '답변 가이드: 트렌드와 연결한 통찰력 있는 분석',
+          diagnosis: '즉석자가진단: "당신이 어떻게 기여할 수 있을까요?"',
+          helpQuestions: [
+            '현재 가장 집중하는 이슈는?',
+            '향후 성장 동력은?',
+            '내가 기여할 수 있는 부분은?'
+          ],
+          ifDifficult: '리포트, 인터뷰를 찾아보세요.',
+          ifStillDifficult: '일반적인 트렌드라도 연결하세요.',
+          example: '가장 큰 도전은 어려움 극복입니다.'
+        },
+        placeholder: '예: 가장 큰 도전은...',
+        rows: 4
+      }
+    ],
+    5: [
+      {
+        id: 'q2_5_1',
+        label: 'Q2.5.1. 달성 후 기여 방안을 프로젝트 단위로 설명해주세요',
+        hint: '구체적인 프로젝트 아이디어와 실행 계획',
+        guide: {
+          description: '답변 가이드: 구체적인 프로젝트 아이디어와 실행 계획',
+          diagnosis: '즉석자가진단: "필요한 리소스는 뭐예요?"',
+          helpQuestions: [
+            '구체적인 프로젝트명은?',
+            '필요한 리소스와 기간은?',
+            '예상되는 성과 지표는?'
+          ],
+          ifDifficult: '현재 진행 중인 프로젝트를 참고하세요.',
+          ifStillDifficult: '간단한 프로젝트부터 시작하세요.',
+          example: '첫 3개월: 목표 타겟 프로젝트 기획'
+        },
+        placeholder: '예: 첫 3개월...',
+        rows: 4
+      },
+      {
+        id: 'q2_5_2',
+        label: 'Q2.5.2. 달성 첫 6개월 동안의 구체적인 목표는?',
+        hint: '시간 순서에 따른 단계별 계획',
+        guide: {
+          description: '답변 가이드: 시간 순서에 따른 단계별 계획',
+          diagnosis: '즉석자가진단: "그게 현실적인가요?"',
+          helpQuestions: [
+            '첫 달: 적응 및 학습',
+            '2-3달: 실무 참여',
+            '4-6달: 독자적 기여'
+          ],
+          ifDifficult: '일반적인 성장 경로를 참고하세요.',
+          ifStillDifficult: '단계별로 나눠 생각하세요.',
+          example: '첫 달은 업무 방식을 익히며...'
+        },
+        placeholder: '예: 첫 달은...',
+        rows: 4
+      },
+      {
+        id: 'q2_5_3',
+        label: 'Q2.5.3. 이 성과 특유의 상황에서 어떻게 적응할 건가요?',
+        hint: '문화와 업무 방식에 대한 구체적 적응 전략',
+        guide: {
+          description: '답변 가이드: 문화와 업무 방식에 대한 구체적 적응 전략',
+          diagnosis: '즉석자가진단: "첫 주에 뭘 할 건가요?"',
+          helpQuestions: [
+            '빠른 의사결정 문화에 적응하려면?',
+            '협업이 필요하다면?',
+            '애자일한 조직 문화에서는?'
+          ],
+          ifDifficult: '특징적인 문화를 하나 선택해서 적응 방법을 설명하세요.',
+          ifStillDifficult: '일반적인 적응 전략이라도 구체화하세요.',
+          example: '애자일 업무 방식에 빠르게 적응하기 위해...'
+        },
+        placeholder: '예: 애자일 업무 방식에...',
+        rows: 4
+      }
+    ],
+    6: [
+      {
+        id: 'q2_6_1',
+        label: 'Q2.6.1. 롤모델이 있다면 누구이고, 왜인가요?',
+        hint: '구체적인 인물과 닮고 싶은 점 명확히',
+        guide: {
+          description: '답변 가이드: 구체적인 인물과 닮고 싶은 점 명확히',
+          diagnosis: '즉석자가진단: "그 사람의 어떤 점을 닮고 싶어요?"',
+          helpQuestions: [
+            '그 사람의 어떤 점을 닮고 싶나요?',
+            '그 사람의 경로는?',
+            '나만의 차별점은?'
+          ],
+          ifDifficult: '유명 인사를 찾아보세요.',
+          ifStillDifficult: '유명하지 않아도 괜찮습니다.',
+          example: '목표 달성 롤모델을...'
+        },
+        placeholder: '예: 목표 달성 롤모델을...',
+        rows: 4
+      },
+      {
+        id: 'q2_6_2',
+        label: 'Q2.6.2. 이 분야에서 나만의 전문성을 어떻게 만들 건가요?',
+        hint: '차별화된 전문 영역과 구체적 계획',
+        guide: {
+          description: '답변 가이드: 차별화된 전문 영역과 구체적 계획',
+          diagnosis: '즉석자가진단: "왜 그 분야인가요?"',
+          helpQuestions: [
+            '어떤 세부 분야에 집중할 건가요?',
+            '차별화 포인트는?',
+            '그를 위한 준비는?'
+          ],
+          ifDifficult: '현재 트렌드와 자신의 강점을 결합하세요.',
+          ifStillDifficult: '기본에 충실하되 한 가지를 깊게 파는 전략도 좋습니다.',
+          example: '목표 달성 전문가가 되고자 합니다.'
+        },
+        placeholder: '예: 목표 달성...',
         rows: 4
       }
     ]
@@ -395,43 +502,235 @@ const GoalAchievementWorkbook = () => {
   const round3Questions = [
     {
       id: 'connect_1_2',
-      label: '연결 확인 1→2: 동기가 구체적 목표로 이어지는가?',
-      hint: 'STEP 1 동기가 STEP 2 계획으로 자연스럽게 연결',
-      placeholder: '예: 위기감으로 인해 구체적인 학습 계획을 세웠습니다...',
+      label: '연결 확인 1→2: 동기가 구체적 목표로 자연스럽게 이어지는가?',
+      hint: 'STEP 1의 동기가 STEP 2의 목표로 어떻게 이어졌나요?',
+      placeholder: '예: 그 경험 이후 목표에 대한 호기심을 실제 계획으로 발전시키고자...',
       rows: 3,
       referenceSteps: [1, 2],
-      referenceQuestions: ['q1_1_1', 'q1_2_1']
+      referenceQuestions: ['q1_1_1', 'q1_1_2', 'q1_2_1']
     },
     {
       id: 'connect_2_3',
-      label: '연결 확인 2→3: 계획이 실행으로 이어지는가?',
-      hint: 'STEP 2 계획이 STEP 3 실행과 일치',
-      placeholder: '예: 계획한 학습 일정을 따르며 어려움을 겪었습니다...',
+      label: '연결 확인 2→3: 계획이 실제 실행과 일치하는가?',
+      hint: 'STEP 2의 계획을 통해 STEP 3의 실행이 어떻게 깊어졌나요?',
+      placeholder: '예: 이러한 계획을 통해 단순한 흥미를 넘어 이 실행의 본질을 이해하게 되었습니다...',
       rows: 3,
       referenceSteps: [2, 3],
-      referenceQuestions: ['q1_2_2', 'q1_3_1']
+      referenceQuestions: ['q1_2_1', 'q1_2_2', 'q1_3_1', 'q1_3_2']
+    },
+    {
+      id: 'connect_3_4',
+      label: '연결 확인 3→4: 어려움이 혁신적 해결로 연결되는가?',
+      hint: 'STEP 3의 이해가 STEP 4의 해결로 어떻게 전환되었나요?',
+      placeholder: '예: 이러한 관심은 단순한 호기심에 그치지 않고, 실제 역량을 키우기 위한 구체적인 해결로 이어졌습니다...',
+      rows: 3,
+      referenceSteps: [3, 4],
+      referenceQuestions: ['q1_3_2', 'q1_3_1', 'q1_4_1', 'q1_4_2']
+    },
+    {
+      id: 'connect_4_5',
+      label: '연결 확인 4→5: 해결책이 구체적 성과로 이어지는가?',
+      hint: 'STEP 4의 해결 과정이 STEP 5의 성과에 어떤 영향을 주었나요?',
+      placeholder: '예: 이러한 해결 과정을 통해 원하는 결과의 방향이 명확해졌고...',
+      rows: 3,
+      referenceSteps: [4, 5],
+      referenceQuestions: ['q1_4_1', 'q1_4_2', 'q1_5_1', 'q1_5_2']
+    },
+    {
+      id: 'connect_5_6',
+      label: '연결 확인 5→6: 성과가 의미 있는 학습으로 승화되는가?',
+      hint: 'STEP 5의 성과가 STEP 6의 학습에 어떤 영향을 주었나요?',
+      placeholder: '예: 이러한 성과를 통해 학습 방향이 명확해졌고...',
+      rows: 3,
+      referenceSteps: [5, 6],
+      referenceQuestions: ['q1_5_1', 'q1_5_2', 'q1_6_1', 'q1_6_2']
     }
   ];
 
+  const toggleStepSelection = (stepId) => {
+    setSelectedSteps(prev => 
+      prev.includes(stepId) 
+        ? prev.filter(id => id !== stepId)
+        : [...prev, stepId]
+    );
+  };
+
+  const canGoNext = () => {
+    if (currentPhase === 'round1' && currentStep === 0) {
+      return Object.values(basicInfo).every(value => value.trim() !== '');
+    }
+    const currentQuestions = currentPhase === 'round1' 
+      ? round1Steps[currentStep].questions || []
+      : currentPhase === 'round2'
+      ? round2Questions[selectedSteps[currentStep]]
+      : [round3Questions[currentStep]];
+
+    return currentQuestions.every(q => answers[q.id]?.trim());
+  };
+
+  const calculateProgress = () => {
+    if (currentPhase === 'round1') {
+      return ((currentStep / (round1Steps.length - 1)) * 33.33);
+    } else if (currentPhase === 'round2') {
+      return 33.33 + ((currentStep / selectedSteps.length) * 33.33);
+    } else if (currentPhase === 'round3') {
+      return 66.66 + ((currentStep / round3Questions.length) * 33.33);
+    }
+    return 0;
+  };
+
+  const progress = calculateProgress();
+
+  const goToNextStep = () => {
+    if (currentPhase === 'round1') {
+      if (currentStep < round1Steps.length - 1) {
+        setCurrentStep(currentStep + 1);
+      } else {
+        setCurrentPhase('evaluation');
+        setCurrentStep(0);
+      }
+    } else if (currentPhase === 'evaluation') {
+      setCurrentPhase('round2');
+      setCurrentStep(0);
+    } else if (currentPhase === 'round2') {
+      if (currentStep < selectedSteps.length - 1) {
+        setCurrentStep(currentStep + 1);
+      } else {
+        setCurrentPhase('round3');
+        setCurrentStep(0);
+      }
+    } else if (currentPhase === 'round3') {
+      if (currentStep < round3Questions.length - 1) {
+        setCurrentStep(currentStep + 1);
+      } else {
+        setCurrentPhase('completed');
+        generateFinalText();
+      }
+    }
+  };
+
+  const goToPrevStep = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    } else if (currentPhase === 'round2') {
+      setCurrentPhase('evaluation');
+    } else if (currentPhase === 'round3') {
+      setCurrentPhase('round2');
+      setCurrentStep(selectedSteps.length - 1);
+    } else if (currentPhase === 'evaluation') {
+      setCurrentPhase('round1');
+      setCurrentStep(round1Steps.length - 1);
+    } else if (currentPhase === 'completed') {
+      setCurrentPhase('round3');
+      setCurrentStep(round3Questions.length - 1);
+    }
+  };
+
+  const toggleGuide = (questionId) => {
+    setShowGuide(prev => ({
+      ...prev,
+      [questionId]: !prev[questionId]
+    }));
+  };
+
+  const handleBasicInfoChange = (field, value) => {
+    setBasicInfo(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleAnswerChange = (id, value) => {
+    setAnswers(prev => ({ ...prev, [id]: value }));
+  };
+
+  const generateFinalText = () => {
+    let text = `목표수립 및 달성 완성\n\n`;
+    text += `지원 직무: ${basicInfo.position}\n`;
+    text += `회사명: ${basicInfo.company}\n`;
+    text += `목표: ${basicInfo.goal}\n\n`;
+
+    round1Steps.slice(1).forEach(step => {
+      text += `${step.title}\n`;
+      step.questions.forEach(q => {
+        text += `${q.label}\n${answers[q.id] || ''}\n\n`;
+      });
+    });
+
+    selectedSteps.forEach(stepId => {
+      const step = round1Steps.find(s => s.id === stepId);
+      text += `${step.title} - 심화\n`;
+      round2Questions[stepId].forEach(q => {
+        text += `${q.label}\n${answers[q.id] || ''}\n\n`;
+      });
+    });
+
+    round3Questions.forEach(q => {
+      text += `${q.label}\n${answers[q.id] || ''}\n\n`;
+    });
+
+    setFinalText(text);
+  };
+
+  const getRawAnswersText = () => {
+    let text = '';
+    Object.entries(answers).forEach(([id, answer]) => {
+      text += `${id}: ${answer}\n\n`;
+    });
+    return text;
+  };
+
+  const downloadFinalText = () => {
+    const blob = new Blob([finalText], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${basicInfo.company || '회사'}_목표달성.doc`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setDownloadSuccess(true);
+  };
+
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-          <h2 className="text-2xl font-bold mb-4 text-center">로그인</h2>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="비밀번호를 입력하세요"
-          />
-          <button
-            onClick={handleLogin}
-            className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            로그인
-          </button>
-          {showError && <p className="text-red-500 text-center mt-2">잘못된 비밀번호입니다.</p>}
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">
+              목표수립 및 달성 워크북
+            </h1>
+            <p className="text-gray-600 mb-4">
+              6단계 체계적 목표달성 완성 가이드
+            </p>
+            <p className="text-sm text-gray-500">
+              © 2025 CareerEngineer All Rights Reserved.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
+                placeholder="비밀번호를 입력하세요"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {showError && (
+              <p className="text-red-500 text-sm text-center">
+                잘못된 비밀번호입니다.
+              </p>
+            )}
+
+            <button
+              onClick={handleLogin}
+              className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+            >
+              워크북 열기
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -441,161 +740,39 @@ const GoalAchievementWorkbook = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-            <h1 className="text-3xl font-bold mb-4">목표수립 및 달성 워크북</h1>
-            <p className="text-gray-600 mb-6">진정성이 화려함을 이긴다 + 구체적 경험이 설득력을 만든다</p>
-            <p className="text-gray-700 mb-6">CareerEngineer의 6단계 체계적 목표 달성 가이드</p>
+          <div className="bg-white rounded-lg shadow-lg p-8">
+            <h1 className="text-3xl font-bold text-gray-800 mb-4 text-center">
+              목표수립 및 달성 워크북
+            </h1>
+            <p className="text-center text-gray-600 mb-8">
+              6단계 체계적 목표달성 완성 가이드
+            </p>
+
+            <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+              <h3 className="font-bold text-blue-800 mb-2">💡 빠른 활용 가이드</h3>
+              <ul className="text-sm text-blue-700 space-y-1">
+                <li>• 사전 준비: 실전가이드 읽기 완료 권장</li>
+                <li>• 목적: 6단계 질문 답변으로 목표달성 완성</li>
+                <li>• 막힐 때: 참고자료 해당 섹션 확인</li>
+              </ul>
+            </div>
+
+            <div className="bg-green-50 border-l-4 border-green-400 p-4 mb-6">
+              <h3 className="font-bold text-green-800 mb-2">📝 목표달성 핵심 원칙</h3>
+              <ul className="text-sm text-green-700 space-y-1">
+                <li>• 진정성 원칙: 실제 경험한 사실인가?</li>
+                <li>• 구체성 원칙: 명확한 목표와 기한이 있는가?</li>
+                <li>• 차별성 원칙: 남들과 다른 독특한 접근법이 있는가?</li>
+                <li>• 학습성 원칙: 경험에서 얻은 구체적 교훈이 있는가?</li>
+              </ul>
+            </div>
+
             <button
               onClick={() => setShowIntro(false)}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="w-full py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold text-lg"
             >
               1라운드 시작하기 →
             </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (currentPhase === 'round1') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">1라운드: 기본 작성</h2>
-            <p className="text-gray-600 mb-6">기본 정보를 입력하고 각 STEP에 답변하세요.</p>
-            {currentStep === 0 ? (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">작성일</label>
-                  <input
-                    type="text"
-                    value={basicInfo.date}
-                    onChange={(e) => handleBasicInfoChange('date', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    placeholder="예: 2025-10-10_17-10"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">지원 직무</label>
-                  <input
-                    type="text"
-                    value={basicInfo.position}
-                    onChange={(e) => handleBasicInfoChange('position', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    placeholder="예: 마케팅, 개발 등"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">회사명</label>
-                  <input
-                    type="text"
-                    value={basicInfo.company}
-                    onChange={(e) => handleBasicInfoChange('company', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    placeholder="예: 삼성전자, 네이버 등"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">경험 제목</label>
-                  <input
-                    type="text"
-                    value={basicInfo.experienceTitle}
-                    onChange={(e) => handleBasicInfoChange('experienceTitle', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    placeholder="예: Python 학습 프로젝트"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">경험 시기</label>
-                  <input
-                    type="text"
-                    value={basicInfo.experiencePeriod}
-                    onChange={(e) => handleBasicInfoChange('experiencePeriod', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    placeholder="예: 2023년 9월 ~ 2024년 3월"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">소요 기간</label>
-                  <input
-                    type="text"
-                    value={basicInfo.duration}
-                    onChange={(e) => handleBasicInfoChange('duration', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    placeholder="예: 6개월"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">관련 직무 역량</label>
-                  <input
-                    type="text"
-                    value={basicInfo.relatedCompetency}
-                    onChange={(e) => handleBasicInfoChange('relatedCompetency', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    placeholder="예: 데이터 분석, 문제 해결"
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {round1Steps[currentStep].questions.map((q) => (
-                  <div key={q.id} className="mb-6 border-b border-gray-200 pb-6 last:border-b-0">
-                    <div className="flex items-start justify-between mb-2">
-                      <label className="text-lg font-semibold text-gray-800">{q.label}</label>
-                      {q.guide && (
-                        <button
-                          onClick={() => toggleGuide(q.id)}
-                          className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
-                        >
-                          <HelpCircle className="w-4 h-4" />
-                          {showGuide[q.id] ? '가이드 숨기기' : '가이드 보기'}
-                        </button>
-                      )}
-                    </div>
-                    {q.hint && <p className="text-sm text-gray-600 mb-2">💡 {q.hint}</p>}
-                    {q.guide && showGuide[q.id] && (
-                      <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-3 space-y-3">
-                        <p className="text-sm font-semibold text-blue-900 mb-1">📝 {q.guide.description}</p>
-                        <p className="text-sm font-semibold text-blue-900 mb-1">🎯 {q.guide.diagnosis}</p>
-                        {q.guide.helpQuestions && (
-                          <div>
-                            <p className="text-sm font-semibold text-blue-900 mb-1">❓ 구체화 도움 질문:</p>
-                            <ul className="text-sm text-blue-800 space-y-1 ml-4">
-                              {q.guide.helpQuestions.map((hq, i) => <li key={i}>• {hq}</li>)}
-                            </ul>
-                          </div>
-                        )}
-                        {q.guide.ifDifficult && <p className="text-sm text-blue-800">{q.guide.ifDifficult}</p>}
-                        {q.guide.ifStillDifficult && <p className="text-sm text-blue-800">{q.guide.ifStillDifficult}</p>}
-                        {q.guide.example && <p className="text-sm text-blue-800 italic bg-white p-2 rounded">{q.guide.example}</p>}
-                      </div>
-                    )}
-                    <textarea
-                      value={answers[q.id] || ''}
-                      onChange={(e) => handleAnswerChange(q.id, e.target.value)}
-                      rows={q.rows || 3}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"
-                      placeholder={q.placeholder}
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-            <div className="flex gap-4 mt-8">
-              {currentStep > 0 && (
-                <button onClick={goToPrevStep} className="flex items-center gap-2 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
-                  <ChevronLeft className="w-5 h-5" /> 이전
-                </button>
-              )}
-              <button
-                onClick={goToNextStep}
-                disabled={!canGoNext()}
-                className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                다음 <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -611,12 +788,14 @@ const GoalAchievementWorkbook = () => {
               1라운드 완료! 🎉
             </h2>
             <p className="text-center text-gray-600 mb-8">
-              부족하다고 느끼는 STEP을 선택하여 2라운드에서 심화 질문에 답변하세요.
+              부족하다고 느끼는 STEP을 선택하여 2라운드에서 심화 질문에 답변하세요
             </p>
+
             <div className="space-y-4 mb-8">
               {round1Steps.slice(1).map(step => {
                 const stepId = step.id;
                 const isSelected = selectedSteps.includes(stepId);
+                
                 return (
                   <div 
                     key={stepId}
@@ -650,11 +829,13 @@ const GoalAchievementWorkbook = () => {
                 );
               })}
             </div>
+
             <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
               <p className="text-sm text-blue-800">
-                <strong>💡 선택 기준:</strong> 답변이 부족하거나 더 구체화가 필요한 STEP을 선택하세요. (1개 이상)
+                <strong>💡 선택 기준:</strong> 답변이 부족하거나 더 구체화가 필요한 STEP을 자유롭게 선택하세요. (1개 이상)
               </p>
             </div>
+
             <div className="flex gap-4">
               <button
                 onClick={goToPrevStep}
@@ -672,160 +853,11 @@ const GoalAchievementWorkbook = () => {
               </button>
             </div>
           </div>
+
           <div className="text-center mt-6">
             <p className="text-xs text-gray-500">
               © 2025 CareerEngineer All Rights Reserved.
             </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (currentPhase === 'round2') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">2라운드: 심화 작성</h2>
-            <p className="text-gray-600 mb-6">선택한 STEP에 대해 심화 질문에 답변하세요.</p>
-            <div className="space-y-6">
-              {round2Questions[selectedSteps[currentStep]].map((q) => (
-                <div key={q.id} className="mb-6 border-b border-gray-200 pb-6 last:border-b-0">
-                  <div className="flex items-start justify-between mb-2">
-                    <label className="text-lg font-semibold text-gray-800">{q.label}</label>
-                    {q.guide && (
-                      <button
-                        onClick={() => toggleGuide(q.id)}
-                        className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        <HelpCircle className="w-4 h-4" />
-                        {showGuide[q.id] ? '가이드 숨기기' : '가이드 보기'}
-                      </button>
-                    )}
-                  </div>
-                  {q.hint && <p className="text-sm text-gray-600 mb-2">💡 {q.hint}</p>}
-                  {q.guide && showGuide[q.id] && (
-                    <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-3 space-y-3">
-                      <p className="text-sm font-semibold text-blue-900 mb-1">📝 {q.guide.description}</p>
-                      <p className="text-sm font-semibold text-blue-900 mb-1">🎯 {q.guide.diagnosis}</p>
-                      {q.guide.helpQuestions && (
-                        <div>
-                          <p className="text-sm font-semibold text-blue-900 mb-1">❓ 구체화 도움 질문:</p>
-                          <ul className="text-sm text-blue-800 space-y-1 ml-4">
-                            {q.guide.helpQuestions.map((hq, i) => <li key={i}>• {hq}</li>)}
-                          </ul>
-                        </div>
-                      )}
-                      {q.guide.ifDifficult && <p className="text-sm text-blue-800">{q.guide.ifDifficult}</p>}
-                      {q.guide.example && <p className="text-sm text-blue-800 italic bg-white p-2 rounded">{q.guide.example}</p>}
-                    </div>
-                  )}
-                  <textarea
-                    value={answers[q.id] || ''}
-                    onChange={(e) => handleAnswerChange(q.id, e.target.value)}
-                    rows={q.rows || 3}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"
-                    placeholder={q.placeholder}
-                  />
-                </div>
-              ))}
-            </div>
-            <div className="flex gap-4 mt-8">
-              <button onClick={goToPrevStep} className="flex items-center gap-2 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
-                <ChevronLeft className="w-5 h-5" /> 이전
-              </button>
-              <button
-                onClick={goToNextStep}
-                disabled={!canGoNext()}
-                className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                다음 <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (currentPhase === 'round3') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">3라운드: 연결 및 완성</h2>
-            <p className="text-gray-600 mb-6">각 STEP 간 연결을 확인하고 최종 답변을 작성하세요.</p>
-            <div className="space-y-6">
-              {round3Questions[currentStep].questions.map((q) => (
-                <div key={q.id} className="mb-6 border-b border-gray-200 pb-6 last:border-b-0">
-                  <div className="flex items-start justify-between mb-2">
-                    <label className="text-lg font-semibold text-gray-800">{q.label}</label>
-                    {q.guide && (
-                      <button
-                        onClick={() => toggleGuide(q.id)}
-                        className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        <HelpCircle className="w-4 h-4" />
-                        {showGuide[q.id] ? '가이드 숨기기' : '가이드 보기'}
-                      </button>
-                    )}
-                  </div>
-                  {q.hint && <p className="text-sm text-gray-600 mb-2">💡 {q.hint}</p>}
-                  {q.referenceQuestions && (
-                    <div className="bg-indigo-50 border-l-4 border-indigo-400 p-4 mb-3">
-                      <p className="text-sm font-semibold text-indigo-900 mb-2">📚 참고: 이전 답변</p>
-                      <div className="space-y-3">
-                        {q.referenceQuestions.map((refId) => {
-                          const refQuestion = [...round1Steps.flatMap(s => s.questions || [])].find(q => q?.id === refId);
-                          return refQuestion && answers[refId] ? (
-                            <div key={refId} className="bg-white p-3 rounded text-sm">
-                              <p className="font-semibold text-gray-700 mb-1">{refQuestion.label}</p>
-                              <p className="text-gray-600 italic">{answers[refId]?.substring(0, 150)}{answers[refId]?.length > 150 ? '...' : ''}</p>
-                            </div>
-                          ) : null;
-                        })}
-                      </div>
-                    </div>
-                  )}
-                  {q.guide && showGuide[q.id] && (
-                    <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-3 space-y-3">
-                      <p className="text-sm font-semibold text-blue-900 mb-1">📝 {q.guide.description}</p>
-                      <p className="text-sm font-semibold text-blue-900 mb-1">🎯 {q.guide.diagnosis}</p>
-                      {q.guide.helpQuestions && (
-                        <div>
-                          <p className="text-sm font-semibold text-blue-900 mb-1">❓ 구체화 도움 질문:</p>
-                          <ul className="text-sm text-blue-800 space-y-1 ml-4">
-                            {q.guide.helpQuestions.map((hq, i) => <li key={i}>• {hq}</li>)}
-                          </ul>
-                        </div>
-                      )}
-                      {q.guide.ifDifficult && <p className="text-sm text-blue-800">{q.guide.ifDifficult}</p>}
-                      {q.guide.example && <p className="text-sm text-blue-800 italic bg-white p-2 rounded">{q.guide.example}</p>}
-                    </div>
-                  )}
-                  <textarea
-                    value={answers[q.id] || ''}
-                    onChange={(e) => handleAnswerChange(q.id, e.target.value)}
-                    rows={q.rows || 3}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"
-                    placeholder={q.placeholder}
-                  />
-                </div>
-              ))}
-            </div>
-            <div className="flex gap-4 mt-8">
-              <button onClick={goToPrevStep} className="flex items-center gap-2 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
-                <ChevronLeft className="w-5 h-5" /> 이전
-              </button>
-              <button
-                onClick={goToNextStep}
-                disabled={!canGoNext()}
-                className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                다음 <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -841,26 +873,36 @@ const GoalAchievementWorkbook = () => {
               <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-4">
                 <Check className="w-10 h-10 text-green-600" />
               </div>
-              <h2 className="text-3xl font-bold text-gray-800 mb-2">목표달성 완성! 🎉</h2>
-              <p className="text-gray-600">아래 내용을 확인하고 자유롭게 수정하세요.</p>
+              <h2 className="text-3xl font-bold text-gray-800 mb-2">
+                목표달성 완성! 🎉
+              </h2>
+              <p className="text-gray-600">
+                아래 내용을 확인하고 자유롭게 수정하세요
+              </p>
             </div>
+
             <div className="bg-red-100 border-2 border-red-500 rounded-lg p-5 mb-6">
               <div className="flex items-start gap-3">
                 <span className="text-3xl">⚠️</span>
                 <div>
-                  <p className="text-base font-bold text-red-900 mb-2">반드시 다운로드하세요!</p>
+                  <p className="text-base font-bold text-red-900 mb-2">
+                    반드시 다운로드하세요!
+                  </p>
                   <p className="text-sm text-red-800 leading-relaxed">
-                    작성한 내용은 브라우저에 임시 저장되어 있습니다. 페이지를 새로고침하거나 닫으면 <strong>모든 내용이 삭제</strong>됩니다.
+                    지금까지 작성한 모든 내용은 브라우저에만 임시 저장되어 있습니다. 
+                    페이지를 새로고침하거나 닫으면 <strong>모든 내용이 즉시 삭제</strong>됩니다.
                     <br />
                     💾 <strong>지금 바로 "워드 파일로 다운로드"</strong> 버튼을 눌러 .doc 파일로 저장하세요!
                   </p>
                 </div>
               </div>
             </div>
+
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg p-5 mb-6">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                  <Edit3 className="w-5 h-5 text-blue-600" /> 완성된 목표달성 (수정 가능)
+                  <Edit3 className="w-5 h-5 text-blue-600" />
+                  완성된 목표달성 (수정 가능)
                 </h3>
                 <button
                   onClick={() => setShowRawAnswers(!showRawAnswers)}
@@ -870,6 +912,7 @@ const GoalAchievementWorkbook = () => {
                   {showRawAnswers ? '원본 답변 숨기기' : '원본 답변 보기'}
                 </button>
               </div>
+              
               <textarea
                 value={finalText}
                 onChange={(e) => setFinalText(e.target.value)}
@@ -877,6 +920,7 @@ const GoalAchievementWorkbook = () => {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none font-serif leading-relaxed"
               />
             </div>
+
             {showRawAnswers && (
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
                 <h4 className="font-semibold text-gray-800 mb-3">📋 원본 답변 참고</h4>
@@ -885,46 +929,55 @@ const GoalAchievementWorkbook = () => {
                 </pre>
               </div>
             )}
+
             <button
               onClick={downloadFinalText}
               className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 font-semibold text-lg shadow-lg mb-4"
             >
-              <Download className="w-6 h-6" /> 워드 파일로 다운로드 (.doc)
+              <Download className="w-6 h-6" />
+              워드 파일로 다운로드 (.doc)
             </button>
+
             {downloadSuccess && (
               <div className="bg-green-100 border-2 border-green-500 rounded-lg p-4 text-center mb-4">
-                <p className="text-green-800 font-semibold">✅ 다운로드 완료!</p>
+                <p className="text-green-800 font-semibold">
+                  ✅ 다운로드 완료!
+                </p>
                 <p className="text-sm text-green-700 mt-1">
-                  다운로드 폴더에서 "{basicInfo.company || '회사'}_목표달성_{new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(/\//g, '-').replace(/ /g, '_').replace(':', '-')}.doc" 파일을 열어주세요.
+                  다운로드 폴더에서 "{basicInfo.company || '회사'}_목표달성.doc" 파일을 Microsoft Word로 열어주세요.
                 </p>
               </div>
             )}
+
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
               <p className="text-sm text-blue-800">
-                💾 <strong>워드에서 편집 가능:</strong> 다운로드한 .doc 파일을 Microsoft Word나 한글(HWP)에서 편집하세요.
+                💾 <strong>워드에서 편집 가능:</strong> 다운로드한 .doc 파일을 Microsoft Word나 한글(HWP)에서 열어 자유롭게 편집하고 서식을 적용할 수 있습니다.
               </p>
             </div>
+
             <div className="flex gap-4 mt-4">
               <button
                 onClick={goToPrevStep}
                 className="flex items-center gap-2 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium"
               >
-                <ChevronLeft className="w-5 h-5" /> 이전으로
+                <ChevronLeft className="w-5 h-5" />
+                이전으로
               </button>
             </div>
           </div>
+
+          {/* 저작권 안내 */}
           <div className="bg-white rounded-lg shadow-lg p-6 mt-6">
             <h3 className="font-bold text-gray-800 mb-2">📌 워크북 사용 안내</h3>
             <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
-              <li><strong>진정성 원칙:</strong> 실제 경험만 작성</li>
+              <li><strong>진정성 원칙:</strong> 3초 자가진단을 통과한 확실한 내용만 작성</li>
               <li><strong>구체성 원칙:</strong> 숫자와 사실로 표현</li>
-              <li><strong>차별성 원칙:</strong> 독창적인 접근법 포함</li>
-              <li><strong>학습성 원칙:</strong> 구체적 교훈 포함</li>
+              <li><strong>검증 가능:</strong> 가족·친구들도 인정할 수 있는 내용만 사용</li>
             </ul>
             <div className="mt-3 pt-3 border-t border-gray-200">
               <p className="text-xs font-semibold text-gray-700 mb-1">💡 3초 자가진단이란?</p>
               <p className="text-xs text-gray-600">
-                “정말이에요?”에 3초 내 구체적 예시로 답할 수 있는지 확인하는 방법입니다.
+                누군가 "정말이에요?"라고 물었을 때 3초 안에 자신있게 구체적인 예시나 증거를 댈 수 있는지 확인하는 것입니다.
               </p>
             </div>
             <div className="mt-4 pt-4 border-t border-gray-200">
@@ -932,7 +985,7 @@ const GoalAchievementWorkbook = () => {
                 © 2025 CareerEngineer All Rights Reserved.
               </p>
               <p className="text-xs text-gray-500 mt-1">
-                개인적 용도로만 사용하며, 상업적 목적 및 무단 배포 금지.
+                이 워크북은 개인적인 용도로만 사용해야 하며, 상업적 목적의 사용 및 무단 배포를 엄격히 금지합니다.
               </p>
             </div>
           </div>
@@ -941,23 +994,216 @@ const GoalAchievementWorkbook = () => {
     );
   }
 
-  return null;
-};
+  const currentStepData = currentPhase === 'round1' 
+    ? round1Steps[currentStep]
+    : currentPhase === 'round2'
+    ? { 
+        title: `${round1Steps[selectedSteps[currentStep]].title} - 심화`,
+        questions: round2Questions[selectedSteps[currentStep]]
+      }
+    : {
+        title: '3라운드: 연결 및 완성',
+        questions: [round3Questions[currentStep]]
+      };
 
-function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>목표수립 및 달성 워크북</h1>
-      </header>
-      <main>
-        <GoalAchievementWorkbook />
-      </main>
-      <footer>
-        <p>© 2025 CareerEngineer All Rights Reserved.</p>
-      </footer>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+            목표수립 및 달성 워크북
+          </h1>
+          <p className="text-gray-600">
+            진정성이 화려함을 이긴다 + 구체적 경험이 설득력을 만든다
+          </p>
+          
+          <div className="mt-4">
+            <div className="flex justify-between text-sm text-gray-600 mb-2">
+              <span>
+                {currentPhase === 'round1' ? '1라운드' : currentPhase === 'round2' ? '2라운드' : '3라운드'} - {currentStepData.title}
+              </span>
+              <span>전체 진행률: {Math.round(progress)}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-3">
+              <div 
+                className="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full transition-all duration-500"
+                style={{ width: progress + '%' }}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-lg p-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">
+            {currentStepData.title}
+          </h2>
+          {currentStepData.subtitle && (
+            <p className="text-gray-600 mb-6">{currentStepData.subtitle}</p>
+          )}
+
+          {currentStep === 0 && currentPhase === 'round1' ? (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  지원 직무
+                </label>
+                <input
+                  type="text"
+                  value={basicInfo.position}
+                  onChange={(e) => handleBasicInfoChange('position', e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="예: 데이터 분석, SW 개발 등"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  회사명
+                </label>
+                <input
+                  type="text"
+                  value={basicInfo.company}
+                  onChange={(e) => handleBasicInfoChange('company', e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="예: 삼성전자, LG 등"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  목표
+                </label>
+                <input
+                  type="text"
+                  value={basicInfo.goal}
+                  onChange={(e) => handleBasicInfoChange('goal', e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="예: Python 마스터"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {currentStepData.questions.map((q) => (
+                <div key={q.id} className="mb-6 border-b border-gray-200 pb-6 last:border-b-0">
+                  <div className="flex items-start justify-between mb-2">
+                    <label className="text-lg font-semibold text-gray-800">
+                      {q.label}
+                    </label>
+                    {q.guide && (
+                      <button
+                        onClick={() => toggleGuide(q.id)}
+                        className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
+                      >
+                        <HelpCircle className="w-4 h-4" />
+                        {showGuide[q.id] ? '가이드 숨기기' : '가이드 보기'}
+                      </button>
+                    )}
+                  </div>
+                  
+                  {q.hint && (
+                    <p className="text-sm text-gray-600 mb-2">💡 {q.hint}</p>
+                  )}
+                  
+                  {q.referenceQuestions && (
+                    <div className="bg-indigo-50 border-l-4 border-indigo-400 p-4 mb-3">
+                      <p className="text-sm font-semibold text-indigo-900 mb-2">📚 참고: 이전 답변</p>
+                      <div className="space-y-3">
+                        {q.referenceQuestions.map((refId) => {
+                          const refQuestion = [...round1Steps.flatMap(s => s.questions || [])].find(q => q?.id === refId);
+                          if (!refQuestion || !answers[refId]) return null;
+                          return (
+                            <div key={refId} className="bg-white p-3 rounded text-sm">
+                              <p className="font-semibold text-gray-700 mb-1">{refQuestion.label}</p>
+                              <p className="text-gray-600 italic">{answers[refId]?.substring(0, 150)}{answers[refId]?.length > 150 ? '...' : ''}</p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {q.guide && showGuide[q.id] && (
+                    <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-3 space-y-3">
+                      <div>
+                        <p className="text-sm font-semibold text-blue-900 mb-1">📝 {q.guide.description}</p>
+                      </div>
+                      
+                      <div>
+                        <p className="text-sm font-semibold text-blue-900 mb-1">🎯 {q.guide.diagnosis}</p>
+                      </div>
+                      
+                      {q.guide.helpQuestions && (
+                        <div>
+                          <p className="text-sm font-semibold text-blue-900 mb-1">❓ 구체화 도움 질문:</p>
+                          <ul className="text-sm text-blue-800 space-y-1 ml-4">
+                            {q.guide.helpQuestions.map((hq, i) => (
+                              <li key={i}>• {hq}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      {q.guide.ifDifficult && (
+                        <div>
+                          <p className="text-sm font-semibold text-blue-900 mb-1">💭 답변하기 어렵다면:</p>
+                          <p className="text-sm text-blue-800">{q.guide.ifDifficult}</p>
+                        </div>
+                      )}
+                      
+                      {q.guide.ifStillDifficult && (
+                        <div>
+                          <p className="text-sm font-semibold text-blue-900 mb-1">💡 구체화 도움 질문으로도 어렵다면:</p>
+                          <p className="text-sm text-blue-800">{q.guide.ifStillDifficult}</p>
+                        </div>
+                      )}
+                      
+                      {q.guide.example && (
+                        <div>
+                          <p className="text-sm font-semibold text-blue-900 mb-1">✏️ 답변 작성 예시:</p>
+                          <p className="text-sm text-blue-800 italic bg-white p-2 rounded">{q.guide.example}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  <textarea
+                    value={answers[q.id] || ''}
+                    onChange={(e) => handleAnswerChange(q.id, e.target.value)}
+                    rows={q.rows || 3}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"
+                    placeholder={q.placeholder}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="flex gap-4 mt-8">
+            <button
+              onClick={goToPrevStep}
+              className="flex items-center gap-2 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium"
+            >
+              <ChevronLeft className="w-5 h-5" />
+              이전
+            </button>
+            <button
+              onClick={goToNextStep}
+              disabled={!canGoNext()}
+              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+            >
+              다음
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        <div className="text-center mt-6">
+          <p className="text-xs text-gray-500">
+            © 2025 CareerEngineer All Rights Reserved.
+          </p>
+        </div>
+      </div>
     </div>
   );
-}
+};
 
-export default App;
+export default GoalAchievementWorkbook;
