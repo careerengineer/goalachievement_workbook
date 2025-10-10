@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Check, Download, Lock, HelpCircle, Eye, Edit3 } from 'lucide-react';
+import './App.css'; // CSS 파일이 있다면 포함
 
 const GoalAchievementWorkbook = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -15,7 +16,7 @@ const GoalAchievementWorkbook = () => {
   const [finalText, setFinalText] = useState('');
 
   const [basicInfo, setBasicInfo] = useState({
-    date: '',
+    date: new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '-'),
     position: '',
     company: '',
     experienceTitle: '',
@@ -80,7 +81,7 @@ const GoalAchievementWorkbook = () => {
     } else if (currentPhase === 'round3') {
       setCurrentPhase('round2');
       setCurrentStep(selectedSteps.length - 1);
-    } else if (currentPhase === 'completed') { // Fixed typo here
+    } else if (currentPhase === 'completed') {
       setCurrentPhase('round3');
       setCurrentStep(round3Questions.length - 1);
     }
@@ -137,7 +138,7 @@ const GoalAchievementWorkbook = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${basicInfo.company || '회사'}_목표달성_${new Date().toLocaleDateString()}.doc`;
+    a.download = `${basicInfo.company || '회사'}_목표달성_${new Date().toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })}.doc`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -387,7 +388,6 @@ const GoalAchievementWorkbook = () => {
         rows: 4
       }
     ]
-    // 나머지 STEP에 대한 round2 질문은 PDF 후속 페이지로 확장
   };
 
   const round3Questions = [
@@ -409,9 +409,9 @@ const GoalAchievementWorkbook = () => {
       referenceSteps: [2, 3],
       referenceQuestions: ['q1_2_2', 'q1_3_1']
     }
-    // 나머지 연결 확인 질문은 PDF 기반으로 추가
   ];
 
+  // 3라운드 구조에 맞춘 렌더링
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -436,100 +436,296 @@ const GoalAchievementWorkbook = () => {
     );
   }
 
-  if (showIntro) {
+  if (currentPhase === 'round1') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-            <h1 className="text-3xl font-bold mb-4">목표수립 및 달성 워크북</h1>
-            <p className="text-gray-600 mb-6">진정성이 화려함을 이긴다 + 구체적 경험이 설득력을 만든다</p>
-            <p className="text-gray-700 mb-6">CareerEngineer의 6단계 체계적 목표 달성 가이드</p>
-            <button
-              onClick={() => setShowIntro(false)}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              1라운드 시작하기 →
-            </button>
+          <div className="bg-white rounded-lg shadow-lg p-8">
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">1라운드: 기본 작성</h2>
+            <p className="text-gray-600 mb-6">기본 정보를 입력하고 각 STEP에 답변하세요.</p>
+            {currentStep === 0 ? (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">작성일</label>
+                  <input
+                    type="text"
+                    value={basicInfo.date}
+                    onChange={(e) => handleBasicInfoChange('date', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    placeholder="예: 2025-10-10"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">지원 직무</label>
+                  <input
+                    type="text"
+                    value={basicInfo.position}
+                    onChange={(e) => handleBasicInfoChange('position', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    placeholder="예: 마케팅, 개발 등"
+                  />
+                </div>
+                {/* 나머지 기본 정보 입력 필드 */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">회사명</label>
+                  <input
+                    type="text"
+                    value={basicInfo.company}
+                    onChange={(e) => handleBasicInfoChange('company', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    placeholder="예: 삼성전자, 네이버 등"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">경험 제목</label>
+                  <input
+                    type="text"
+                    value={basicInfo.experienceTitle}
+                    onChange={(e) => handleBasicInfoChange('experienceTitle', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    placeholder="예: Python 학습 프로젝트"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">경험 시기</label>
+                  <input
+                    type="text"
+                    value={basicInfo.experiencePeriod}
+                    onChange={(e) => handleBasicInfoChange('experiencePeriod', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    placeholder="예: 2023년 9월 ~ 2024년 3월"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">소요 기간</label>
+                  <input
+                    type="text"
+                    value={basicInfo.duration}
+                    onChange={(e) => handleBasicInfoChange('duration', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    placeholder="예: 6개월"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">관련 직무 역량</label>
+                  <input
+                    type="text"
+                    value={basicInfo.relatedCompetency}
+                    onChange={(e) => handleBasicInfoChange('relatedCompetency', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    placeholder="예: 데이터 분석, 문제 해결"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {round1Steps[currentStep].questions.map((q) => (
+                  <div key={q.id} className="mb-6 border-b border-gray-200 pb-6 last:border-b-0">
+                    <div className="flex items-start justify-between mb-2">
+                      <label className="text-lg font-semibold text-gray-800">{q.label}</label>
+                      {q.guide && (
+                        <button
+                          onClick={() => toggleGuide(q.id)}
+                          className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
+                        >
+                          <HelpCircle className="w-4 h-4" />
+                          {showGuide[q.id] ? '가이드 숨기기' : '가이드 보기'}
+                        </button>
+                      )}
+                    </div>
+                    {q.hint && <p className="text-sm text-gray-600 mb-2">💡 {q.hint}</p>}
+                    {q.guide && showGuide[q.id] && (
+                      <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-3 space-y-3">
+                        <p className="text-sm font-semibold text-blue-900 mb-1">📝 {q.guide.description}</p>
+                        <p className="text-sm font-semibold text-blue-900 mb-1">🎯 {q.guide.diagnosis}</p>
+                        {q.guide.helpQuestions && (
+                          <div>
+                            <p className="text-sm font-semibold text-blue-900 mb-1">❓ 구체화 도움 질문:</p>
+                            <ul className="text-sm text-blue-800 space-y-1 ml-4">
+                              {q.guide.helpQuestions.map((hq, i) => <li key={i}>• {hq}</li>)}
+                            </ul>
+                          </div>
+                        )}
+                        {q.guide.ifDifficult && <p className="text-sm text-blue-800">{q.guide.ifDifficult}</p>}
+                        {q.guide.ifStillDifficult && <p className="text-sm text-blue-800">{q.guide.ifStillDifficult}</p>}
+                        {q.guide.example && <p className="text-sm text-blue-800 italic bg-white p-2 rounded">{q.guide.example}</p>}
+                      </div>
+                    )}
+                    <textarea
+                      value={answers[q.id] || ''}
+                      onChange={(e) => handleAnswerChange(q.id, e.target.value)}
+                      rows={q.rows || 3}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"
+                      placeholder={q.placeholder}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="flex gap-4 mt-8">
+              {currentStep > 0 && (
+                <button onClick={goToPrevStep} className="flex items-center gap-2 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                  <ChevronLeft className="w-5 h-5" /> 이전
+                </button>
+              )}
+              <button
+                onClick={goToNextStep}
+                disabled={!canGoNext()}
+                className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                다음 <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
-  if (currentPhase === 'evaluation') {
+  if (currentPhase === 'round2') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
         <div className="max-w-4xl mx-auto">
           <div className="bg-white rounded-lg shadow-lg p-8">
-            <h2 className="text-3xl font-bold text-gray-800 mb-4 text-center">
-              1라운드 완료! 🎉
-            </h2>
-            <p className="text-center text-gray-600 mb-8">
-              부족하다고 느끼는 STEP을 선택하여 2라운드에서 심화 질문에 답변하세요.
-            </p>
-            <div className="space-y-4 mb-8">
-              {round1Steps.slice(1).map(step => {
-                const stepId = step.id;
-                const isSelected = selectedSteps.includes(stepId);
-                return (
-                  <div 
-                    key={stepId}
-                    className={`border-2 rounded-lg p-5 transition-all ${
-                      isSelected 
-                        ? 'border-indigo-500 bg-indigo-50' 
-                        : 'border-gray-200 bg-white hover:border-indigo-300'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className="font-bold text-gray-800 mb-1">{step.title}</h3>
-                        <p className="text-sm text-gray-600 mb-2">{step.subtitle}</p>
-                        <div className="bg-gray-50 rounded p-3 text-sm text-gray-700">
-                          <strong>내 답변:</strong> {answers[step.questions[0].id]?.substring(0, 100) || '(답변 없음)'}
-                          {answers[step.questions[0].id]?.length > 100 && '...'}
-                        </div>
-                      </div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">2라운드: 심화 작성</h2>
+            <p className="text-gray-600 mb-6">선택한 STEP에 대해 심화 질문에 답변하세요.</p>
+            <div className="space-y-6">
+              {round2Questions[selectedSteps[currentStep]].map((q) => (
+                <div key={q.id} className="mb-6 border-b border-gray-200 pb-6 last:border-b-0">
+                  <div className="flex items-start justify-between mb-2">
+                    <label className="text-lg font-semibold text-gray-800">{q.label}</label>
+                    {q.guide && (
                       <button
-                        onClick={() => toggleStepSelection(stepId)}
-                        className={`ml-4 px-4 py-2 rounded-lg font-semibold transition-colors ${
-                          isSelected 
-                            ? 'bg-indigo-600 text-white'
-                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                        }`}
+                        onClick={() => toggleGuide(q.id)}
+                        className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
                       >
-                        {isSelected ? '✓ 선택됨' : '심화 선택'}
+                        <HelpCircle className="w-4 h-4" />
+                        {showGuide[q.id] ? '가이드 숨기기' : '가이드 보기'}
                       </button>
-                    </div>
+                    )}
                   </div>
-                );
-              })}
+                  {q.hint && <p className="text-sm text-gray-600 mb-2">💡 {q.hint}</p>}
+                  {q.guide && showGuide[q.id] && (
+                    <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-3 space-y-3">
+                      <p className="text-sm font-semibold text-blue-900 mb-1">📝 {q.guide.description}</p>
+                      <p className="text-sm font-semibold text-blue-900 mb-1">🎯 {q.guide.diagnosis}</p>
+                      {q.guide.helpQuestions && (
+                        <div>
+                          <p className="text-sm font-semibold text-blue-900 mb-1">❓ 구체화 도움 질문:</p>
+                          <ul className="text-sm text-blue-800 space-y-1 ml-4">
+                            {q.guide.helpQuestions.map((hq, i) => <li key={i}>• {hq}</li>)}
+                          </ul>
+                        </div>
+                      )}
+                      {q.guide.ifDifficult && <p className="text-sm text-blue-800">{q.guide.ifDifficult}</p>}
+                      {q.guide.example && <p className="text-sm text-blue-800 italic bg-white p-2 rounded">{q.guide.example}</p>}
+                    </div>
+                  )}
+                  <textarea
+                    value={answers[q.id] || ''}
+                    onChange={(e) => handleAnswerChange(q.id, e.target.value)}
+                    rows={q.rows || 3}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"
+                    placeholder={q.placeholder}
+                  />
+                </div>
+              ))}
             </div>
-            <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
-              <p className="text-sm text-blue-800">
-                <strong>💡 선택 기준:</strong> 답변이 부족하거나 더 구체화가 필요한 STEP을 선택하세요. (1개 이상)
-              </p>
-            </div>
-            <div className="flex gap-4">
-              <button
-                onClick={goToPrevStep}
-                className="flex items-center gap-2 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium"
-              >
-                <ChevronLeft className="w-5 h-5" />
-                이전
+            <div className="flex gap-4 mt-8">
+              <button onClick={goToPrevStep} className="flex items-center gap-2 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                <ChevronLeft className="w-5 h-5" /> 이전
               </button>
               <button
                 onClick={goToNextStep}
                 disabled={!canGoNext()}
-                className="flex-1 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg"
+                className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                2라운드 시작하기 ({selectedSteps.length}개 선택됨)
+                다음 <ChevronRight className="w-5 h-5" />
               </button>
             </div>
           </div>
-          <div className="text-center mt-6">
-            <p className="text-xs text-gray-500">
-              © 2025 CareerEngineer All Rights Reserved.
-            </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (currentPhase === 'round3') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white rounded-lg shadow-lg p-8">
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">3라운드: 연결 및 완성</h2>
+            <p className="text-gray-600 mb-6">각 STEP 간 연결을 확인하고 최종 답변을 작성하세요.</p>
+            <div className="space-y-6">
+              {round3Questions[currentStep].questions.map((q) => (
+                <div key={q.id} className="mb-6 border-b border-gray-200 pb-6 last:border-b-0">
+                  <div className="flex items-start justify-between mb-2">
+                    <label className="text-lg font-semibold text-gray-800">{q.label}</label>
+                    {q.guide && (
+                      <button
+                        onClick={() => toggleGuide(q.id)}
+                        className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
+                      >
+                        <HelpCircle className="w-4 h-4" />
+                        {showGuide[q.id] ? '가이드 숨기기' : '가이드 보기'}
+                      </button>
+                    )}
+                  </div>
+                  {q.hint && <p className="text-sm text-gray-600 mb-2">💡 {q.hint}</p>}
+                  {q.referenceQuestions && (
+                    <div className="bg-indigo-50 border-l-4 border-indigo-400 p-4 mb-3">
+                      <p className="text-sm font-semibold text-indigo-900 mb-2">📚 참고: 이전 답변</p>
+                      <div className="space-y-3">
+                        {q.referenceQuestions.map((refId) => {
+                          const refQuestion = [...round1Steps.flatMap(s => s.questions || [])].find(q => q?.id === refId);
+                          return refQuestion && answers[refId] ? (
+                            <div key={refId} className="bg-white p-3 rounded text-sm">
+                              <p className="font-semibold text-gray-700 mb-1">{refQuestion.label}</p>
+                              <p className="text-gray-600 italic">{answers[refId]?.substring(0, 150)}{answers[refId]?.length > 150 ? '...' : ''}</p>
+                            </div>
+                          ) : null;
+                        })}
+                      </div>
+                    </div>
+                  )}
+                  {q.guide && showGuide[q.id] && (
+                    <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-3 space-y-3">
+                      <p className="text-sm font-semibold text-blue-900 mb-1">📝 {q.guide.description}</p>
+                      <p className="text-sm font-semibold text-blue-900 mb-1">🎯 {q.guide.diagnosis}</p>
+                      {q.guide.helpQuestions && (
+                        <div>
+                          <p className="text-sm font-semibold text-blue-900 mb-1">❓ 구체화 도움 질문:</p>
+                          <ul className="text-sm text-blue-800 space-y-1 ml-4">
+                            {q.guide.helpQuestions.map((hq, i) => <li key={i}>• {hq}</li>)}
+                          </ul>
+                        </div>
+                      )}
+                      {q.guide.ifDifficult && <p className="text-sm text-blue-800">{q.guide.ifDifficult}</p>}
+                      {q.guide.example && <p className="text-sm text-blue-800 italic bg-white p-2 rounded">{q.guide.example}</p>}
+                    </div>
+                  )}
+                  <textarea
+                    value={answers[q.id] || ''}
+                    onChange={(e) => handleAnswerChange(q.id, e.target.value)}
+                    rows={q.rows || 3}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"
+                    placeholder={q.placeholder}
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-4 mt-8">
+              <button onClick={goToPrevStep} className="flex items-center gap-2 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                <ChevronLeft className="w-5 h-5" /> 이전
+              </button>
+              <button
+                onClick={goToNextStep}
+                disabled={!canGoNext()}
+                className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                다음 <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -545,20 +741,14 @@ const GoalAchievementWorkbook = () => {
               <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-4">
                 <Check className="w-10 h-10 text-green-600" />
               </div>
-              <h2 className="text-3xl font-bold text-gray-800 mb-2">
-                목표달성 완성! 🎉
-              </h2>
-              <p className="text-gray-600">
-                아래 내용을 확인하고 자유롭게 수정하세요.
-              </p>
+              <h2 className="text-3xl font-bold text-gray-800 mb-2">목표달성 완성! 🎉</h2>
+              <p className="text-gray-600">아래 내용을 확인하고 자유롭게 수정하세요.</p>
             </div>
             <div className="bg-red-100 border-2 border-red-500 rounded-lg p-5 mb-6">
               <div className="flex items-start gap-3">
                 <span className="text-3xl">⚠️</span>
                 <div>
-                  <p className="text-base font-bold text-red-900 mb-2">
-                    반드시 다운로드하세요!
-                  </p>
+                  <p className="text-base font-bold text-red-900 mb-2">반드시 다운로드하세요!</p>
                   <p className="text-sm text-red-800 leading-relaxed">
                     작성한 내용은 브라우저에 임시 저장되어 있습니다. 페이지를 새로고침하거나 닫으면 <strong>모든 내용이 삭제</strong>됩니다.
                     <br />
@@ -570,8 +760,7 @@ const GoalAchievementWorkbook = () => {
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg p-5 mb-6">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                  <Edit3 className="w-5 h-5 text-blue-600" />
-                  완성된 목표달성 (수정 가능)
+                  <Edit3 className="w-5 h-5 text-blue-600" /> 완성된 목표달성 (수정 가능)
                 </h3>
                 <button
                   onClick={() => setShowRawAnswers(!showRawAnswers)}
@@ -600,16 +789,13 @@ const GoalAchievementWorkbook = () => {
               onClick={downloadFinalText}
               className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 font-semibold text-lg shadow-lg mb-4"
             >
-              <Download className="w-6 h-6" />
-              워드 파일로 다운로드 (.doc)
+              <Download className="w-6 h-6" /> 워드 파일로 다운로드 (.doc)
             </button>
             {downloadSuccess && (
               <div className="bg-green-100 border-2 border-green-500 rounded-lg p-4 text-center mb-4">
-                <p className="text-green-800 font-semibold">
-                  ✅ 다운로드 완료!
-                </p>
+                <p className="text-green-800 font-semibold">✅ 다운로드 완료!</p>
                 <p className="text-sm text-green-700 mt-1">
-                  다운로드 폴더에서 "{basicInfo.company || '회사'}_목표달성_{new Date().toLocaleDateString()}.doc" 파일을 열어주세요.
+                  다운로드 폴더에서 "{basicInfo.company || '회사'}_목표달성_{new Date().toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })}.doc" 파일을 열어주세요.
                 </p>
               </div>
             )}
@@ -623,32 +809,8 @@ const GoalAchievementWorkbook = () => {
                 onClick={goToPrevStep}
                 className="flex items-center gap-2 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium"
               >
-                <ChevronLeft className="w-5 h-5" />
-                이전으로
+                <ChevronLeft className="w-5 h-5" /> 이전으로
               </button>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg shadow-lg p-6 mt-6">
-            <h3 className="font-bold text-gray-800 mb-2">📌 워크북 사용 안내</h3>
-            <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
-              <li><strong>진정성 원칙:</strong> 실제 경험만 작성</li>
-              <li><strong>구체성 원칙:</strong> 숫자와 사실로 표현</li>
-              <li><strong>차별성 원칙:</strong> 독창적인 접근법 포함</li>
-              <li><strong>학습성 원칙:</strong> 구체적 교훈 포함</li>
-            </ul>
-            <div className="mt-3 pt-3 border-t border-gray-200">
-              <p className="text-xs font-semibold text-gray-700 mb-1">💡 3초 자가진단이란?</p>
-              <p className="text-xs text-gray-600">
-                “정말이에요?”에 3초 내 구체적 예시로 답할 수 있는지 확인하는 방법입니다.
-              </p>
-            </div>
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <p className="text-xs text-gray-500">
-                © 2025 CareerEngineer All Rights Reserved.
-              </p>
-              <p className="text-xs text-gray-500 mt-1">
-                개인적 용도로만 사용하며, 상업적 목적 및 무단 배포 금지.
-              </p>
             </div>
           </div>
         </div>
@@ -656,254 +818,23 @@ const GoalAchievementWorkbook = () => {
     );
   }
 
-  const currentStepData = currentPhase === 'round1' 
-    ? round1Steps[currentStep]
-    : currentPhase === 'round2'
-    ? { 
-        title: `${round1Steps.find(s => s.id === selectedSteps[currentStep]).title} - 심화`,
-        questions: round2Questions[selectedSteps[currentStep]]
-      }
-    : {
-        title: '3라운드: 연결 및 완성',
-        questions: [round3Questions[currentStep]]
-      };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            목표수립 및 달성 워크북
-          </h1>
-          <p className="text-gray-600">
-            진정성이 화려함을 이긴다 + 구체적 경험이 설득력을 만든다
-          </p>
-          <div className="mt-4">
-            <div className="flex justify-between text-sm text-gray-600 mb-2">
-              <span>
-                {currentPhase === 'round1' ? '1라운드' : currentPhase === 'round2' ? '2라운드' : '3라운드'} - {currentStepData.title}
-              </span>
-              <span>전체 진행률: {Math.round(progress())}%</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
-              <div 
-                className="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full transition-all duration-500"
-                style={{ width: `${progress()}%` }}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">
-            {currentStepData.title}
-          </h2>
-          {currentStepData.subtitle && (
-            <p className="text-gray-600 mb-6">{currentStepData.subtitle}</p>
-          )}
-
-          {currentStep === 0 && currentPhase === 'round1' ? (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  작성일
-                </label>
-                <input
-                  type="text"
-                  value={basicInfo.date}
-                  onChange={(e) => handleBasicInfoChange('date', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="예: 2025-10-10"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  지원 직무
-                </label>
-                <input
-                  type="text"
-                  value={basicInfo.position}
-                  onChange={(e) => handleBasicInfoChange('position', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="예: 마케팅, 개발 등"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  회사명
-                </label>
-                <input
-                  type="text"
-                  value={basicInfo.company}
-                  onChange={(e) => handleBasicInfoChange('company', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="예: 삼성전자, 네이버 등"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  경험 제목
-                </label>
-                <input
-                  type="text"
-                  value={basicInfo.experienceTitle}
-                  onChange={(e) => handleBasicInfoChange('experienceTitle', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="예: Python 학습 프로젝트"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  경험 시기
-                </label>
-                <input
-                  type="text"
-                  value={basicInfo.experiencePeriod}
-                  onChange={(e) => handleBasicInfoChange('experiencePeriod', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="예: 2023년 9월 ~ 2024년 3월"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  소요 기간
-                </label>
-                <input
-                  type="text"
-                  value={basicInfo.duration}
-                  onChange={(e) => handleBasicInfoChange('duration', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="예: 6개월"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  관련 직무 역량
-                </label>
-                <input
-                  type="text"
-                  value={basicInfo.relatedCompetency}
-                  onChange={(e) => handleBasicInfoChange('relatedCompetency', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="예: 데이터 분석, 문제 해결"
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {currentStepData.questions.map((q) => (
-                <div key={q.id} className="mb-6 border-b border-gray-200 pb-6 last:border-b-0">
-                  <div className="flex items-start justify-between mb-2">
-                    <label className="text-lg font-semibold text-gray-800">
-                      {q.label}
-                    </label>
-                    {q.guide && (
-                      <button
-                        onClick={() => toggleGuide(q.id)}
-                        className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        <HelpCircle className="w-4 h-4" />
-                        {showGuide[q.id] ? '가이드 숨기기' : '가이드 보기'}
-                      </button>
-                    )}
-                  </div>
-                  {q.hint && (
-                    <p className="text-sm text-gray-600 mb-2">💡 {q.hint}</p>
-                  )}
-                  {q.referenceQuestions && (
-                    <div className="bg-indigo-50 border-l-4 border-indigo-400 p-4 mb-3">
-                      <p className="text-sm font-semibold text-indigo-900 mb-2">📚 참고: 이전 답변</p>
-                      <div className="space-y-3">
-                        {q.referenceQuestions.map((refId) => {
-                          const refQuestion = [...round1Steps.flatMap(s => s.questions || [])].find(q => q?.id === refId);
-                          if (!refQuestion || !answers[refId]) return null;
-                          return (
-                            <div key={refId} className="bg-white p-3 rounded text-sm">
-                              <p className="font-semibold text-gray-700 mb-1">{refQuestion.label}</p>
-                              <p className="text-gray-600 italic">{answers[refId]?.substring(0, 150)}{answers[refId]?.length > 150 ? '...' : ''}</p>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                  {q.guide && showGuide[q.id] && (
-                    <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-3 space-y-3">
-                      <div>
-                        <p className="text-sm font-semibold text-blue-900 mb-1">📝 {q.guide.description}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-blue-900 mb-1">🎯 {q.guide.diagnosis}</p>
-                      </div>
-                      {q.guide.helpQuestions && (
-                        <div>
-                          <p className="text-sm font-semibold text-blue-900 mb-1">❓ 구체화 도움 질문:</p>
-                          <ul className="text-sm text-blue-800 space-y-1 ml-4">
-                            {q.guide.helpQuestions.map((hq, i) => (
-                              <li key={i}>• {hq}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      {q.guide.ifDifficult && (
-                        <div>
-                          <p className="text-sm font-semibold text-blue-900 mb-1">💭 답변하기 어렵다면:</p>
-                          <p className="text-sm text-blue-800">{q.guide.ifDifficult}</p>
-                        </div>
-                      )}
-                      {q.guide.ifStillDifficult && (
-                        <div>
-                          <p className="text-sm font-semibold text-blue-900 mb-1">💡 더 어려운 경우:</p>
-                          <p className="text-sm text-blue-800">{q.guide.ifStillDifficult}</p>
-                        </div>
-                      )}
-                      {q.guide.example && (
-                        <div>
-                          <p className="text-sm font-semibold text-blue-900 mb-1">✏️ 답변 작성 예시:</p>
-                          <p className="text-sm text-blue-800 italic bg-white p-2 rounded">{q.guide.example}</p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  <textarea
-                    value={answers[q.id] || ''}
-                    onChange={(e) => handleAnswerChange(q.id, e.target.value)}
-                    rows={q.rows || 3}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"
-                    placeholder={q.placeholder}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="flex gap-4 mt-8">
-            <button
-              onClick={goToPrevStep}
-              className="flex items-center gap-2 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium"
-            >
-              <ChevronLeft className="w-5 h-5" />
-              이전
-            </button>
-            <button
-              onClick={goToNextStep}
-              disabled={!canGoNext()}
-              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
-            >
-              다음
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-
-        <div className="text-center mt-6">
-          <p className="text-xs text-gray-500">
-            © 2025 CareerEngineer All Rights Reserved.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
+  return null; // 기본적으로 3라운드 외 상태는 처리되지 않음
 };
 
-export default GoalAchievementWorkbook;
+function App() {
+  return (
+    <div className="App">
+      <header className="App-header">
+        <h1>목표수립 및 달성 워크북</h1>
+      </header>
+      <main>
+        <GoalAchievementWorkbook />
+      </main>
+      <footer>
+        <p>© 2025 CareerEngineer All Rights Reserved.</p>
+      </footer>
+    </div>
+  );
+}
+
+export default App;
