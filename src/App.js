@@ -803,7 +803,6 @@ const GoalAchievementWorkbook = () => {
     
     // 추가 서비스 (별도 섹션)
     const extraServices = [
-      { label: 'CareerEngineer 전자책 / 멘토링', url: 'https://www.latpeed.com/spaces/0/stores/collections/68459e30db90f1ebed56226f' },
       { label: 'CareerEngineer 1-Hour 1:1 취업컨설팅', url: 'https://www.latpeed.com/products/S92cP' },
       { label: 'CareerEngineer 카카오톡 상담', url: 'https://open.kakao.com/me/careerengineer' },
     ];
@@ -1119,8 +1118,8 @@ const GoalAchievementWorkbook = () => {
           <RelatedWorkbookList
             title="선행 학습 권장 — 작성 전에 보면 좋은 워크북"
             items={[
-              { id: 'job_analysis', hint: '회사·직무 맥락에 맞는 목표 선택' },
-              { id: 'experience', hint: '목표 달성 경험을 STAR로 정리' }
+              { id: 'experience', hint: '목표 달성 경험을 STAR로 정리' },
+              { id: 'job_analysis', hint: '회사·직무 맥락에 맞는 목표 선택' }
             ]}
           />
           <div style={S.boxWarning}>
@@ -1146,27 +1145,6 @@ const GoalAchievementWorkbook = () => {
     <div style={S.page}>
       <FocusStyles />
       <div style={S.container}>
-        <div style={S.headerSticky}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: SPACING.base, flexWrap: 'wrap' }}>
-            <CELockupA height={32} />
-            <div style={{ position: 'relative', flex: 1, display: 'flex', justifyContent: 'center' }}>
-              <button onClick={() => setShowStepNav(v => !v)} style={{ 
-                background: COLORS.bgAlt, border: 'none', cursor: 'pointer',
-                fontSize: FONT.size.sm, color: COLORS.accent, textAlign: 'center',
-                padding: '4px 12px', borderRadius: 4, fontFamily: FONT.family,
-                display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4,
-              }} title="전체 7단계 보기" className="ce-step-nav-trigger">
-                STEP 4 · 목표수립 및 달성 작성
-                <span style={{ fontSize: FONT.size.xs, color: COLORS.accent, opacity: 1, transform: showStepNav ? 'rotate(180deg)' : 'none', transition: 'transform 150ms' }}>▾</span>
-              </button>
-              <StepNavigatorDropdown open={showStepNav} onClose={() => setShowStepNav(false)} currentKey="goalachievement" />
-            </div>
-            <button onClick={savePartial} className="ce-save-btn" style={S.btnSaveHeader} title="지금까지 작성한 내용을 Word로 저장">
-              저장(.doc)
-            </button>
-          </div>
-        </div>
-
         <div style={S.cardLarge}>
           <p style={S.brandEyebrow}>CAREERENGINEER · 자소서 워크북 · 2라운드 진입</p>
           <h2 style={{ ...S.h2, textAlign: 'center', marginBottom: SPACING.sm }}>1라운드 완료</h2>
@@ -1207,7 +1185,7 @@ const GoalAchievementWorkbook = () => {
           </div>
         </div>
 
-        <p style={{ ...S.copyrightText, marginTop: SPACING.lg }}>© 2026 CareerEngineer. All Rights Reserved.</p>
+        <p style={{ ...S.copyrightText, marginTop: SPACING.lg }}>© 2026 CareerEngineer All Rights Reserved.</p>
       <StickyFooter />
       </div>
     </div>
@@ -1218,27 +1196,6 @@ const GoalAchievementWorkbook = () => {
     <div style={S.page}>
       <FocusStyles />
       <div style={S.container}>
-        <div style={S.headerSticky}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: SPACING.base, flexWrap: 'wrap' }}>
-            <CELockupA height={32} />
-            <div style={{ position: 'relative', flex: 1, display: 'flex', justifyContent: 'center' }}>
-              <button onClick={() => setShowStepNav(v => !v)} style={{ 
-                background: COLORS.bgAlt, border: 'none', cursor: 'pointer',
-                fontSize: FONT.size.sm, color: COLORS.accent, textAlign: 'center',
-                padding: '4px 12px', borderRadius: 4, fontFamily: FONT.family,
-                display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4,
-              }} title="전체 7단계 보기" className="ce-step-nav-trigger">
-                STEP 4 · 목표수립 및 달성 작성
-                <span style={{ fontSize: FONT.size.xs, color: COLORS.accent, opacity: 1, transform: showStepNav ? 'rotate(180deg)' : 'none', transition: 'transform 150ms' }}>▾</span>
-              </button>
-              <StepNavigatorDropdown open={showStepNav} onClose={() => setShowStepNav(false)} currentKey="goalachievement" />
-            </div>
-            <button onClick={savePartial} className="ce-save-btn" style={S.btnSaveHeader} title="지금까지 작성한 내용을 Word로 저장">
-              저장(.doc)
-            </button>
-          </div>
-        </div>
-
         <div style={S.cardLarge}>
           <div style={{ textAlign: 'center', marginBottom: SPACING.xl }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 64, height: 64, background: COLORS.greenBg, borderRadius: RADIUS.pill, marginBottom: SPACING.base }}>
@@ -1432,7 +1389,7 @@ const GoalAchievementWorkbook = () => {
         </div>
 
         <div style={S.copyrightWrap}>
-          <p style={S.copyrightText}>© 2026 CareerEngineer. All Rights Reserved.</p>
+          <p style={S.copyrightText}>© 2026 CareerEngineer All Rights Reserved.</p>
           <p style={S.copyrightWarn}>이 워크북은 저작권법에 의해 보호받는 저작물입니다. 무단 복제·배포·수정을 금지하며, 위반 시 법적 책임을 질 수 있습니다.</p>
         </div>
       <StickyFooter />
@@ -1504,7 +1461,7 @@ const GoalAchievementWorkbook = () => {
               const isPast = phaseOrder[currentPhase] > phaseOrder[phase];
               return (
                 <button key={phase} onClick={() => {
-                  if (phase === 'round2') {
+                  if (phase === 'round2' && selectedSteps.length === 0) {
                     setCurrentPhase('evaluation');
                   } else {
                     setCurrentPhase(phase);
