@@ -29,8 +29,7 @@ const RADIUS = { sm: 6, base: 10, md: 14, lg: 20, pill: 999 };
 // ════════════════════════════════════════════════════════════════
 //  CareerEngineer 워크북 라이브러리 (URL은 나중에 일괄 적용)
 // ════════════════════════════════════════════════════════════════
-const WORKBOOK_LINKS = {
-  roadmap:            { label: 'STEP 0 · 취업준비 진단', url: 'https://www.latpeed.com/products/nDbq9' },
+const WORKBOOK_LINKS = { career_roadmap: { label: 'STEP 0 · 취업준비 진단', url: 'https://www.latpeed.com/products/nDbq9' },
   job_analysis:       { label: 'STEP 1 · 채용공고 및 직무 분석', url: 'https://www.latpeed.com/products/-3Wgm' },
   experience:         { label: 'STEP 2 · 경험 정리', url: 'https://www.latpeed.com/products/wDSaj' },
   motivation:         { label: 'STEP 4 · 지원동기 작성', url: 'https://www.latpeed.com/products/dfdMW' },
@@ -181,7 +180,7 @@ const GoalAchievementWorkbook = () => {
             ifStillDifficult: '계획의 핵심은 "논리적 순서"입니다. 왜 A를 먼저 하고 B를 나중에 했는지 인과관계로 설명해보세요.'
           },
           placeholder: '예: 3단계로 설계했습니다. 1단계(1개월): Python 기초 문법 — 체계적 커리큘럼이 필요하다 판단해 온라인 강의 선택. 2단계(1개월): Pandas·Numpy 실습 — 실제 데이터셋으로 반복 훈련. 3단계(1개월): 실전 프로젝트 3개 완성. 이 순서는 현직 데이터 분석가 선배 3명에게 물어 수렴된 방식이었습니다.',
-          rows: 5, relatedWorkbooks: ['roadmap', 'experience']
+          rows: 5, relatedWorkbooks: ['career_roadmap', 'experience']
         },
         {
           id: 'q1_2_2',
@@ -398,7 +397,7 @@ const GoalAchievementWorkbook = () => {
           ifStillDifficult: '목표 달성 후 "이걸 안 했다면 어떻게 됐을까"를 생각해보고 역으로 서술해보세요.'
         },
         placeholder: '예: 더 쉬운 선택은 "관련 자격증만 따는 것"이었습니다. 하지만 실제 포트폴리오 없이 자격증만으로는 "할 수 있다"를 증명하기 어렵다는 것을 현직자 인터뷰를 통해 파악했습니다. 더 긴 시간이 걸리더라도 실제 프로젝트 결과물로 증명하는 것이 결국 빠른 길이라고 판단했습니다.',
-        rows: 4, relatedWorkbooks: ['roadmap', 'job_analysis']
+        rows: 4, relatedWorkbooks: ['career_roadmap', 'job_analysis']
       }
     ],
     2: [
@@ -504,7 +503,7 @@ const GoalAchievementWorkbook = () => {
           ifStillDifficult: '"계속해야 할 이유"를 스스로에게 말했던 것을 떠올려보세요.'
         },
         placeholder: '예: 4주차에 진도가 계획보다 2주 밀렸을 때입니다. 실제로 이틀 동안 컴퓨터를 켜지 않았습니다. 돌아온 계기는 "오늘 30분만 하자"고 자신과 타협한 것이었고, 그 30분이 2시간이 됐습니다.',
-        rows: 4, relatedWorkbooks: ['roadmap', 'experience']
+        rows: 4, relatedWorkbooks: ['career_roadmap', 'experience']
       },
       {
         id: 'q2_5_2',
@@ -777,7 +776,7 @@ const GoalAchievementWorkbook = () => {
     
     // 7단계 구조 - 자소서 5대 항목만 하위 항목 펼침, 나머지는 단일 링크
     const stepGroups = [
-      { step: '0', label: '취업준비 진단', key: 'roadmap' },
+      { step: '0', label: '취업준비 진단', key: 'career_roadmap' },
       { step: '1', label: '채용공고 및 직무 분석', key: 'job_analysis' },
       { step: '2', label: '경험 정리', key: 'experience' },
       { step: '3', inline: true, label: '', items: [
@@ -1200,7 +1199,7 @@ const GoalAchievementWorkbook = () => {
                       <h3 style={{ fontSize: FONT.size.md, fontWeight: FONT.weight.bold, color: COLORS.accent, margin: 0, marginBottom: 4 }}>{step.title}</h3>
                       <p style={{ fontSize: FONT.size.sm, color: COLORS.sub, margin: 0, marginBottom: SPACING.sm }}>{step.subtitle}</p>
                       <div style={{ background: COLORS.bgAlt, borderRadius: RADIUS.sm, padding: SPACING.sm, fontSize: FONT.size.sm, color: COLORS.accent, lineHeight: FONT.lineHeight.base }}>
-                        <strong>내 답변:</strong> {(step.questions && step.questions[0] && answers[step.questions[0].id]?.substring(0, 100)) || '(답변 없음)'}
+                        <strong>내 답변:</strong> {step.questions && step.questions[0] && answers[step.questions[0].id]?.substring(0, 100) || '(답변 없음)'}
                         {step.questions && step.questions[0] && answers[step.questions[0].id]?.length > 100 && '...'}
                       </div>
                     </div>
