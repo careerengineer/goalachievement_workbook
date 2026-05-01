@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/goalachievement_workbook/static/css/main.47620019.css",
-    "main.js": "/goalachievement_workbook/static/js/main.28e74569.js",
-    "static/js/453.d54bbe38.chunk.js": "/goalachievement_workbook/static/js/453.d54bbe38.chunk.js",
-    "index.html": "/goalachievement_workbook/index.html",
-    "main.47620019.css.map": "/goalachievement_workbook/static/css/main.47620019.css.map",
-    "main.28e74569.js.map": "/goalachievement_workbook/static/js/main.28e74569.js.map",
-    "453.d54bbe38.chunk.js.map": "/goalachievement_workbook/static/js/453.d54bbe38.chunk.js.map"
+    "main.css": "/static/css/main.47620019.css",
+    "main.js": "/static/js/main.9b539b13.js",
+    "static/js/453.d54bbe38.chunk.js": "/static/js/453.d54bbe38.chunk.js",
+    "index.html": "/index.html",
+    "main.47620019.css.map": "/static/css/main.47620019.css.map",
+    "main.9b539b13.js.map": "/static/js/main.9b539b13.js.map",
+    "453.d54bbe38.chunk.js.map": "/static/js/453.d54bbe38.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.47620019.css",
-    "static/js/main.28e74569.js"
+    "static/js/main.9b539b13.js"
   ]
 }

@@ -2,7 +2,6 @@
   "name": "goalachievement_workbook",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://careerengineer.github.io/goalachievement_workbook",
   "dependencies": {
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
