@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/goalachievement_workbook/static/css/main.47620019.css",
+    "main.js": "/goalachievement_workbook/static/js/main.eb471379.js",
+    "static/js/453.d54bbe38.chunk.js": "/goalachievement_workbook/static/js/453.d54bbe38.chunk.js",
+    "index.html": "/goalachievement_workbook/index.html",
+    "main.47620019.css.map": "/goalachievement_workbook/static/css/main.47620019.css.map",
+    "main.eb471379.js.map": "/goalachievement_workbook/static/js/main.eb471379.js.map",
+    "453.d54bbe38.chunk.js.map": "/goalachievement_workbook/static/js/453.d54bbe38.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.47620019.css",
+    "static/js/main.eb471379.js"
+  ]
+}
