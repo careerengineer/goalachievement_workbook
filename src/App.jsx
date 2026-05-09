@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 
 // 멘토링·컨설팅 URL 상수 (작업 18: URL 상수화)
 const MENTORING_URLS = {
@@ -654,7 +654,7 @@ const GoalAchievementWorkbook = () => {
   };
 
   const downloadFinalText = () => {
-    const h = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>목표 수립 및 달성</title><style>body{font-family:'맑은 고딕',sans-serif;line-height:1.8;padding:40px}p{margin-bottom:1em}</style></head><body>${finalText.split('\n\n').map(x => `<p>${x.replace(/\n/g,'<br>')}</p>`).join('\n')}</body></html>`;
+    const today = new Date().toISOString().slice(0,10); const h = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>목표 수립 및 달성 - ${basicInfo.company || '회사'}</title><style>body{font-family:'Pretendard','맑은 고딕','Malgun Gothic',sans-serif;max-width:800px;margin:0 auto;padding:50px 60px;color:#0E2750;line-height:1.9;font-size:14px}.header{text-align:center;border-bottom:3px solid #0E2750;padding-bottom:20px;margin-bottom:32px}.header h1{margin:0;font-size:26px;color:#0E2750;letter-spacing:4px;font-weight:700}.header .meta{color:#6E7A8F;font-size:13px;margin-top:10px;line-height:1.6}.header .meta strong{color:#1B3A6B}.body-content{font-size:15px;line-height:2}.body-content p{margin:0 0 1.4em 0;text-align:justify}.foot{margin-top:50px;padding-top:18px;border-top:1px solid #F2F1EC;font-size:12px;color:#6E7A8F;text-align:center;line-height:1.7}</style></head><body><div class="header"><h1>목표 수립 및 달성</h1><div class="meta">${basicInfo.company ? `<strong>${basicInfo.company}</strong>` : ''} ${basicInfo.position ? `${basicInfo.company ? '· ' : ''}${basicInfo.position} 지원` : ''}</div></div><div class="body-content">${finalText.split('\n\n').map(x => `<p>${x.replace(/\n/g,'<br>')}</p>`).join('\n')}</div><div class="foot">작성일 · ${today}<br>CareerEngineer 목표 수립 및 달성 워크북으로 작성 · © 2026 CareerEngineer. All Rights Reserved.</div></body></html>`;
     const b = new Blob([h], { type: 'application/msword;charset=utf-8' }); const u = URL.createObjectURL(b);
     const a = document.createElement('a'); a.href = u; a.download = `${basicInfo.company || '회사'}_목표수립및달성.doc`; a.click();
     URL.revokeObjectURL(u); setDownloadSuccess(true); setTimeout(() => setDownloadSuccess(false), 5000);
