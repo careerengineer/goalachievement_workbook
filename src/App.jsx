@@ -1,5 +1,16 @@
 import React, { useState } from 'react';
 
+
+// __toDocxBlob: HTML을 실제 .docx Blob으로 변환 (모바일 Word 호환)
+// index.html 의 html-docx-js CDN 스크립트로 window.htmlDocx 가 제공됨
+const __toDocxBlob = (html) => {
+  if (typeof window !== 'undefined' && window.htmlDocx && window.htmlDocx.asBlob) {
+    try { return window.htmlDocx.asBlob(html); } catch (e) { console.error('htmlDocx failed:', e); }
+  }
+  return new Blob(['\ufeff' + html], { type: 'application/msword' });
+};
+
+
 // 멘토링·컨설팅 URL 상수 (작업 18: URL 상수화)
 const MENTORING_URLS = {
   consulting:        'https://www.latpeed.com/products/S92cP',  // 1-Hour 1:1 취업컨설팅
@@ -718,10 +729,10 @@ ${notesSection}
 
 </div></body></html>`;
     const BOM = '\uFEFF';
-    const b = new Blob([BOM + h], { type: 'application/msword' });
+    const b = __toDocxBlob(h);
     const u = URL.createObjectURL(b);
     const a = document.createElement('a'); a.href = u;
-    a.download = `목표수립 및 달성_${(basicInfo.company || '미입력').replace(/[^a-zA-Z0-9가-힣\s]/g, '_')}_${today}.doc`;
+    a.download = `목표수립 및 달성_${(basicInfo.company || '미입력').replace(/[^a-zA-Z0-9가-힣\s]/g, '_')}_${today}.docx`;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(u), 1000);
     setDownloadSuccess(true); setTimeout(() => setDownloadSuccess(false), 5000);
@@ -770,10 +781,10 @@ ${finalSection}
 
 </div></body></html>`;
     const BOM = '\uFEFF';
-    const b = new Blob([BOM + html], { type: 'application/msword' });
+    const b = __toDocxBlob(html);
     const u = URL.createObjectURL(b);
     const a = document.createElement('a'); a.href = u;
-    a.download = `목표수립 및 달성_작성노트_${(basicInfo.company || '미입력').replace(/[^a-zA-Z0-9가-힣\s]/g, '_')}_${today}.doc`;
+    a.download = `목표수립 및 달성_작성노트_${(basicInfo.company || '미입력').replace(/[^a-zA-Z0-9가-힣\s]/g, '_')}_${today}.docx`;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(u), 1000);
     setDownloadSuccess(true); setTimeout(() => setDownloadSuccess(false), 3000);
@@ -1320,7 +1331,7 @@ const IntroStickyHeader = ({ workbookKey, stepLabel, StepNavComponent }) => {
           style={{ padding: '8px 14px', borderRadius: 8, border: 'none', fontSize: 14, fontWeight: 600, fontFamily: 'inherit', background: _INTRO_INK, color: '#fff', opacity: 0.4, cursor: 'not-allowed' }}
           title="작성을 시작하면 활성화됩니다"
         >
-          저장(.doc)
+          저장(.docx)
         </button>
       </div>
     </div>
@@ -1424,7 +1435,7 @@ const IntroPage = ({
               <StepNavigatorDropdown open={showStepNav} onClose={() => setShowStepNav(false)} currentKey="goalachievement" />
             </div>
             <button onClick={savePartial} className="ce-save-btn" style={S.btnSaveHeader} title="지금까지 작성한 내용을 Word로 저장">
-              저장(.doc)
+              저장(.docx)
             </button>
           </div>
         </div>
@@ -1496,7 +1507,7 @@ const IntroPage = ({
               <StepNavigatorDropdown open={showStepNav} onClose={() => setShowStepNav(false)} currentKey="goalachievement" />
             </div>
             <button onClick={savePartial} className="ce-save-btn" style={S.btnSaveHeader} title="지금까지 작성한 내용을 Word로 저장">
-              저장(.doc)
+              저장(.docx)
             </button>
           </div>
         </div>
@@ -1681,7 +1692,7 @@ const IntroPage = ({
 
 
           <button onClick={downloadFinalText} style={{ ...S.btnPrimary, padding: '18px 32px', fontSize: FONT.size.md, marginTop: SPACING.md }}>
-            워드 파일로 다운로드 (.doc)
+            워드 파일로 다운로드 (.docx)
           </button>
 
           {downloadSuccess && <p style={{ fontSize: FONT.size.sm, color: COLORS.green, textAlign: 'center', marginTop: SPACING.md, fontWeight: FONT.weight.semibold }}>✓ 다운로드 완료</p>}
@@ -1735,7 +1746,7 @@ const IntroPage = ({
             </div>
             {/* 우: 저장 버튼 */}
             <button onClick={savePartial} className="ce-save-btn" style={S.btnSaveHeader} title="지금까지 작성한 내용을 Word로 저장">
-              저장(.doc)
+              저장(.docx)
             </button>
           </div>
           {/* 진행 바 */}
