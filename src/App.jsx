@@ -654,22 +654,130 @@ const GoalAchievementWorkbook = () => {
   };
 
   const downloadFinalText = () => {
-    const today = new Date().toISOString().slice(0,10); const h = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>목표 수립 및 달성 - ${basicInfo.company || '회사'}</title><style>body{font-family:'Pretendard','맑은 고딕','Malgun Gothic',sans-serif;max-width:800px;margin:0 auto;padding:50px 60px;color:#0E2750;line-height:1.9;font-size:14px}.header{text-align:center;border-bottom:3px solid #0E2750;padding-bottom:20px;margin-bottom:32px}.header h1{margin:0;font-size:26px;color:#0E2750;letter-spacing:4px;font-weight:700}.header .meta{color:#6E7A8F;font-size:13px;margin-top:10px;line-height:1.6}.header .meta strong{color:#1B3A6B}.body-content{font-size:15px;line-height:2}.body-content p{margin:0 0 1.4em 0;text-align:justify}.foot{margin-top:50px;padding-top:18px;border-top:1px solid #F2F1EC;font-size:12px;color:#6E7A8F;text-align:center;line-height:1.7}</style></head><body><div class="header"><h1>목표 수립 및 달성</h1><div class="meta">${basicInfo.company ? `<strong>${basicInfo.company}</strong>` : ''} ${basicInfo.position ? `${basicInfo.company ? '· ' : ''}${basicInfo.position} 지원` : ''}</div></div><div class="body-content">${finalText.split('\n\n').map(x => `<p>${x.replace(/\n/g,'<br>')}</p>`).join('\n')}</div><div class="foot">작성일 · ${today}<br>CareerEngineer 목표 수립 및 달성 워크북으로 작성 · © 2026 CareerEngineer. All Rights Reserved.</div></body></html>`;
-    const b = new Blob([h], { type: 'application/msword;charset=utf-8' }); const u = URL.createObjectURL(b);
-    const a = document.createElement('a'); a.href = u; a.download = `${basicInfo.company || '회사'}_목표수립및달성.doc`; a.click();
-    URL.revokeObjectURL(u); setDownloadSuccess(true); setTimeout(() => setDownloadSuccess(false), 5000);
-  };
-
-  // 중간 저장 (1·2·3라운드 수시 저장 — PART 7-7)
-  const savePartial = () => {
-    const raw = getRawAnswersText();
     const today = new Date().toISOString().slice(0,10);
-    const h = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>목표 수립 및 달성 임시저장</title><style>body{font-family:'맑은 고딕',sans-serif;line-height:1.7;padding:40px;white-space:pre-wrap}</style></head><body>${raw}</body></html>`;
-    const b = new Blob([h], { type: 'application/msword;charset=utf-8' }); const u = URL.createObjectURL(b);
-    const a = document.createElement('a'); a.href = u; a.download = `${basicInfo.company || '회사'}_목표수립및달성_임시저장_${today}.doc`; a.click();
-    URL.revokeObjectURL(u); setDownloadSuccess(true); setTimeout(() => setDownloadSuccess(false), 3000);
+    const esc = (s) => (s || '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const br = (s) => esc(s).replace(/\n/g, '<br/>');
+    
+    const bodyContent = finalText && finalText.trim()
+      ? finalText.split('\n\n').filter(x => x.trim()).map(x => `<p style="font-size:11pt;line-height:2.0;color:#0E2750;margin:0 0 14pt 0;text-align:justify;">${br(x)}</p>`).join('')
+      : `<p style="font-size:11pt;line-height:2.0;color:#6E7A8F;margin:0 0 14pt 0;font-style:italic;">[목표수립 및 달성 본문이 여기에 들어갑니다.]</p>`;
+    
+    const metaLine = (basicInfo.company || basicInfo.position) 
+      ? `<p style="text-align:center;color:#1B3A6B;font-size:12pt;font-weight:bold;margin:0 0 24pt 0;">${esc(basicInfo.company || '')}${basicInfo.company && basicInfo.position ? ' · ' : ''}${basicInfo.position ? esc(basicInfo.position) + ' 지원' : ''}</p>`
+      : '';
+    
+    // 작성 노트 (round1Steps + round3Questions 자동 활용)
+    const sh = (t) => `<p style="font-size:13pt;font-weight:bold;color:#1B3A6B;margin:18pt 0 8pt 0;padding-bottom:4pt;border-bottom:1pt solid #1B3A6B;">${esc(t)}</p>`;
+    const noteItem = (label, val) => `
+      <div style="margin:8pt 0;">
+        <p style="font-size:11pt;font-weight:bold;color:#0E2750;margin:0 0 4pt 0;padding-left:10pt;border-left:3pt solid #C9A86A;">${esc(label)}</p>
+        ${val && val.trim() 
+          ? `<p style="font-size:11pt;line-height:1.7;color:#0E2750;margin:0 0 0 13pt;">${br(val)}</p>` 
+          : `<p style="font-size:11pt;line-height:1.7;color:#6E7A8F;margin:0 0 0 13pt;font-style:italic;">[작성 전]</p>`}
+      </div>`;
+    
+    // round1Steps의 각 step + questions를 자동으로 펼침
+    const round1Notes = round1Steps.slice(1).map(step => {
+      const qaItems = (step.questions || []).map(q => noteItem(q.label || q.id, answers[q.id])).join('');
+      return qaItems ? `${sh(step.title)}${qaItems}` : '';
+    }).join('');
+    
+    // round3Questions (있으면)
+    const round3Notes = (typeof round3Questions !== 'undefined' && Array.isArray(round3Questions))
+      ? `${sh('연결 문장')}${round3Questions.map(q => noteItem(q.label || q.id, answers[q.id])).join('')}`
+      : '';
+    
+    const notesSection = round1Notes + round3Notes;
+    
+    const h = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="ProgId" content="Word.Document">
+<title>목표수립 및 달성</title>
+<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom><w:DoNotPromptForConvert/></w:WordDocument></xml><![endif]-->
+<style>
+@page Section1 { size: A4; margin: 2.5cm 2cm; mso-page-orientation: portrait; }
+div.Section1 { page: Section1; }
+body { font-family: '맑은 고딕', 'Malgun Gothic', sans-serif; font-size: 11pt; color: #0E2750; line-height: 1.7; }
+p { margin: 0 0 8pt 0; }
+</style>
+</head>
+<body lang="KO-KR">
+<div class="Section1">
+<p style="text-align:right;color:#6E7A8F;font-size:10pt;margin:0 0 4pt 0;">작성일 · ${today}</p>
+<p style="font-size:22pt;font-weight:bold;color:#0E2750;text-align:center;margin:0 0 6pt 0;padding-bottom:14pt;border-bottom:3pt solid #0E2750;letter-spacing:8pt;">목표수립 및 달성</p>
+${metaLine}
+<div style="margin-top:24pt;">${bodyContent}</div>
+
+<p style="page-break-before:always;">&nbsp;</p>
+
+<p style="font-size:14pt;font-weight:bold;color:#0E2750;margin:0 0 6pt 0;padding-bottom:6pt;border-bottom:2pt solid #0E2750;">작성 노트 — 단계별 답변</p>
+<p style="font-size:10pt;color:#6E7A8F;margin:0 0 14pt 0;font-style:italic;">아래는 자소서 작성 과정에서 정리한 모든 답변입니다. 다음에 이어 작업하거나 다른 자소서에 활용할 때 참고하세요.</p>
+
+${notesSection}
+
+</div></body></html>`;
+    const BOM = '\uFEFF';
+    const b = new Blob([BOM + h], { type: 'application/msword' });
+    const u = URL.createObjectURL(b);
+    const a = document.createElement('a'); a.href = u;
+    a.download = `목표수립 및 달성_${(basicInfo.company || '미입력').replace(/[^a-zA-Z0-9가-힣\s]/g, '_')}_${today}.doc`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(u), 1000);
+    setDownloadSuccess(true); setTimeout(() => setDownloadSuccess(false), 5000);
   };
 
+  // 임시저장 — 현재까지 작성된 답변들과 최종 통합 본문을 함께 저장
+  const savePartial = () => {
+    const today = new Date().toISOString().slice(0,10);
+    const esc = (s) => (s || '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const br = (s) => esc(s).replace(/\n/g, '<br/>');
+    const raw = getRawText();
+    const rawHtml = esc(raw).replace(/\n/g, '<br/>');
+    
+    const metaLine = (basicInfo.company || basicInfo.position) 
+      ? `<p style="text-align:center;color:#1B3A6B;font-size:12pt;font-weight:bold;margin:0 0 24pt 0;">${esc(basicInfo.company || '')}${basicInfo.company && basicInfo.position ? ' · ' : ''}${basicInfo.position ? esc(basicInfo.position) + ' 지원' : ''}</p>`
+      : '';
+    
+    const finalSection = finalText && finalText.trim() 
+      ? `<p style="font-size:14pt;font-weight:bold;color:#0E2750;margin:24pt 0 10pt 0;padding-bottom:6pt;border-bottom:2pt solid #0E2750;">최종 통합 본문</p>
+         <div style="padding:16pt 20pt;background:#F2F1EC;border-left:3pt solid #1B3A6B;margin:6pt 0 14pt 0;">${finalText.split('\n\n').filter(x => x.trim()).map(x => `<p style="font-size:11pt;line-height:1.9;color:#0E2750;margin:0 0 12pt 0;">${br(x)}</p>`).join('')}</div>`
+      : '';
+    
+    const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="ProgId" content="Word.Document">
+<title>목표수립 및 달성 작성 노트</title>
+<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom><w:DoNotPromptForConvert/></w:WordDocument></xml><![endif]-->
+<style>
+@page Section1 { size: A4; margin: 2.5cm 2cm; mso-page-orientation: portrait; }
+div.Section1 { page: Section1; }
+body { font-family: '맑은 고딕', 'Malgun Gothic', sans-serif; font-size: 11pt; color: #0E2750; line-height: 1.7; }
+p { margin: 0 0 8pt 0; }
+</style>
+</head>
+<body lang="KO-KR">
+<div class="Section1">
+<p style="text-align:right;color:#6E7A8F;font-size:10pt;margin:0 0 4pt 0;">작성일 · ${today}</p>
+<p style="font-size:22pt;font-weight:bold;color:#0E2750;text-align:center;margin:0 0 6pt 0;padding-bottom:14pt;border-bottom:3pt solid #0E2750;letter-spacing:6pt;">목표수립 및 달성 작성 노트</p>
+${metaLine}
+
+${finalSection}
+
+<p style="font-size:14pt;font-weight:bold;color:#0E2750;margin:24pt 0 10pt 0;padding-bottom:6pt;border-bottom:2pt solid #0E2750;">단계별 답변 모음</p>
+<div style="font-size:11pt;line-height:1.8;color:#0E2750;white-space:pre-wrap;mso-pre-wrap:yes;">${rawHtml}</div>
+
+</div></body></html>`;
+    const BOM = '\uFEFF';
+    const b = new Blob([BOM + html], { type: 'application/msword' });
+    const u = URL.createObjectURL(b);
+    const a = document.createElement('a'); a.href = u;
+    a.download = `목표수립 및 달성_작성노트_${(basicInfo.company || '미입력').replace(/[^a-zA-Z0-9가-힣\s]/g, '_')}_${today}.doc`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(u), 1000);
+    setDownloadSuccess(true); setTimeout(() => setDownloadSuccess(false), 3000);
+  };
   const getRawAnswersText = () =>
     `원본 답변 모음\n\n[기본 정보]\n직무: ${basicInfo.position||'-'}\n회사: ${basicInfo.company||'-'}\n목표달성 경험: ${basicInfo.experience||'-'}\n\n[Q1: 목표 정의]\nQ1-1 목표 정의: ${answers.q1_1_1||'-'}\nQ1-2 기대효과: ${answers.q1_1_2||'-'}\nQ1-3 쉽지 않은 이유: ${answers.q1_1_3||'-'}\n\n[Q2: 계획 수립]\nQ2-1 계획: ${answers.q1_2_1||'-'}\nQ2-2 계획의 기대: ${answers.q1_2_2||'-'}\n\n[Q3: 실행과 극복]\nQ3-1 달랐던 점: ${answers.q1_3_1||'-'}\nQ3-2 극복 방법: ${answers.q1_3_2||'-'}\n\n[Q4: 결과와 임팩트]\nQ4-1 달성 결과: ${answers.q1_4_1||'-'}\nQ4-2 기대효과 달성: ${answers.q1_4_2||'-'}\nQ4-3 임팩트: ${answers.q1_4_3||'-'}\n\n[Q5: 노력 과정]\nQ5-1 노력 방식: ${answers.q1_5_1||'-'}\nQ5-2 차별화 접근: ${answers.q1_5_2||'-'}\n\n[Q6: 배움과 기여]\nQ6-1 배운 것: ${answers.q1_6_1||'-'}\nQ6-2 직무 연결: ${answers.q1_6_2||'-'}\nQ6-3 기여 방안: ${answers.q1_6_3||'-'}\n\n[3라운드 연결]\nQ1→Q2: ${answers.connect_q1q2||'-'}\nQ2→Q3: ${answers.connect_q2q3||'-'}\nQ3→Q4: ${answers.connect_q3q4||'-'}\nQ4→Q6: ${answers.connect_q4q6||'-'}\n최종 완성: ${answers.connect_full||'-'}`;
 
