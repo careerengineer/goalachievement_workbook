@@ -1,3 +1,4 @@
+// [BUILD v36 20260520 10:30] docx 저장에 CareerEngineer 자료 + 멘토링 안내 섹션 추가 (ExternalHyperlink + linkP)
 import React, { useState, useEffect } from 'react';
 
 // 멘토링·컨설팅 URL 상수 (작업 18: URL 상수화)
@@ -120,6 +121,8 @@ const GoalAchievementWorkbook = () => {
   const [basicInfo, setBasicInfo] = useState({ position: '', company: '', experience: '' });
   const [answers, setAnswers] = useState({});
   const [autoSaveStatus, setAutoSaveStatus] = useState('');
+  const [confirmingClear, setConfirmingClear] = useState(false);
+  const [clearedFlash, setClearedFlash] = useState(false);
   const [hasRestored, setHasRestored] = useState(false);
 
   // 자동 저장 키
@@ -180,19 +183,19 @@ const GoalAchievementWorkbook = () => {
 
   // 저장된 데이터 초기화
   const clearSavedData = () => {
-    if (window.confirm('저장된 모든 작성 내용을 삭제하고 처음부터 다시 시작합니다.\n\n계속하시겠습니까?')) {
+    if (confirmingClear) {
       localStorage.removeItem(STORAGE_KEY);
       setAnswers({});
-      setBasicInfo({ industry: '', position: '', company: '' });
+      setBasicInfo({ position: '', company: '', experience: '' });
       setFinalText('');
-      setChecklistState({});
-      setSelectedSteps([]);
-      setCurrentPhase('round1');
-      setCurrentStep(0);
-      setShowIntro(true);
-      setHasRestored(false);
-      setAutoSaveStatus('✓ 초기화 완료');
-      setTimeout(() => setAutoSaveStatus(''), 3000);
+      setConfirmingClear(false);
+      setClearedFlash(true);
+      setTimeout(() => { localStorage.removeItem(STORAGE_KEY); }, 50);
+      setTimeout(() => { localStorage.removeItem(STORAGE_KEY); }, 1500);
+      setTimeout(() => setClearedFlash(false), 3000);
+    } else {
+      setConfirmingClear(true);
+      setTimeout(() => setConfirmingClear(false), 5000);
     }
   };
 
@@ -760,7 +763,7 @@ const GoalAchievementWorkbook = () => {
   const downloadFinalText = async () => {
     try {
       const docxLib = await loadDocxLib();
-      const { Document, Paragraph, TextRun, AlignmentType, BorderStyle, Packer } = docxLib;
+      const { Document, Paragraph, TextRun, AlignmentType, BorderStyle, ExternalHyperlink, Packer } = docxLib;
       const today = new Date().toISOString().slice(0,10);
       
       // 스타일 헬퍼
@@ -779,6 +782,18 @@ const GoalAchievementWorkbook = () => {
         children: t.split('\n').flatMap((line, i) => i === 0 ? [new TextRun({ text: line, size: 22, font: '맑은 고딕', color: '0E2750' })] : [new TextRun({ break: 1, text: line, size: 22, font: '맑은 고딕', color: '0E2750' })]),
         spacing: { before: 100, after: 280, line: 400 },
         alignment: AlignmentType.JUSTIFIED
+      });
+
+      const linkP = (label, url, options = {}) => new Paragraph({
+        children: [
+          new TextRun({ text: options.prefix || '', size: 22, font: '맑은 고딕', color: '1B3A6B' }),
+          new ExternalHyperlink({
+            link: url,
+            children: [new TextRun({ text: label, size: 22, font: '맑은 고딕', color: '0563C1', underline: { type: 'single', color: '0563C1' } })]
+          })
+        ],
+        spacing: { before: options.before || 60, after: options.after || 60, line: 340 },
+        indent: { left: options.indent || 240 }
       });
       const dateP = () => new Paragraph({
         children: [new TextRun({ text: '작성일 · ' + today, size: 20, font: '맑은 고딕', color: '6E7A8F' })],
@@ -877,6 +892,35 @@ const GoalAchievementWorkbook = () => {
         });
       }
       
+            
+      // ═══ CareerEngineer 자료 + 멘토링 안내 (docx 본문 끝) ═══
+      children.push(sectionH('CareerEngineer 자료 — 다음 단계로'));
+      children.push(new Paragraph({
+        children: [new TextRun({ text: '이 워크북을 완성한 후 다음 단계로 나아가는 데 도움이 되는 자료들입니다.', italic: true, size: 20, font: '맑은 고딕', color: '6E7A8F' })],
+        spacing: { before: 80, after: 160 }
+      }));
+      children.push(linkP('자소서 작성 전자책 시리즈 (5대 항목 전체)', 'https://www.latpeed.com/products/dfdMW'));
+      children.push(linkP('자소서 멘토링 — 실제 글을 함께 다듬는 1:1 멘토링', 'https://www.latpeed.com/products/fKnUV'));
+      children.push(linkP('1:1 취업 컨설팅 — 방향 설정부터 함께', 'https://www.latpeed.com/products/S92cP'));
+      children.push(linkP('CareerEngineer 카카오톡 상담', 'https://open.kakao.com/me/careerengineer'));
+      children.push(new Paragraph({
+        children: [new TextRun({ text: '', size: 22, font: '맑은 고딕' })],
+        spacing: { before: 240, after: 60 }
+      }));
+      children.push(new Paragraph({
+        children: [new TextRun({ text: 'CareerEngineer 전자책 / 멘토링 전체 안내', bold: true, size: 22, font: '맑은 고딕', color: '0E2750' })],
+        spacing: { before: 160, after: 80 },
+        shading: { fill: 'F2F1EC' },
+        border: { left: { style: BorderStyle.SINGLE, size: 24, color: '1B3A6B', space: 8 } },
+        indent: { left: 240 }
+      }));
+      children.push(new Paragraph({
+        children: [new TextRun({ text: 'CareerEngineer는 취업·이직 준비의 모든 단계를 지원하는 전자책과 멘토링을 운영합니다. 자소서 작성, 경력기술서, 면접 답변집 등 단계별 가이드와 1:1 멘토링이 있으며, 모든 자료는 공학박사 멘토의 실제 합격 사례 기반으로 설계되어 있습니다.', size: 20, font: '맑은 고딕', color: '0E2750' })],
+        spacing: { before: 0, after: 120, line: 360 },
+        indent: { left: 240 }
+      }));
+      children.push(linkP('전체 상품 보기 (클릭)', 'https://www.latpeed.com/stores/eqxhZ', { before: 80, after: 160, indent: 240 }));
+
       const doc = new Document({
         creator: '',
         title: '목표수립 및 달성',
@@ -934,7 +978,7 @@ const GoalAchievementWorkbook = () => {
     btnPrimary: { ...BUTTON.primary, width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: FONT.family },
     btnSecondary: { ...BUTTON.secondary, display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: FONT.family, fontSize: FONT.size.base, padding: '12px 24px' },
     // 저장 버튼 (헤더용 컴팩트 사이즈)
-    btnSaveHeader: { background: COLORS.accent2, color: COLORS.white, border: 'none', borderRadius: RADIUS.base, padding: '8px 14px', fontSize: FONT.size.sm, fontWeight: FONT.weight.semibold, cursor: 'pointer', fontFamily: FONT.family, display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', transition: 'opacity 150ms ease' },
+    btnSaveHeader: { background: COLORS.accent2, color: COLORS.white, border: 'none', borderRadius: RADIUS.base, padding: '0 14px', fontSize: FONT.size.sm, fontWeight: FONT.weight.semibold, cursor: 'pointer', fontFamily: FONT.family, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, whiteSpace: 'nowrap', transition: 'opacity 150ms ease', height: 36 },
     btnText: { ...BUTTON.text, display: 'inline-flex', alignItems: 'center', gap: 4, fontFamily: FONT.family, fontSize: FONT.size.sm },
     progressTrack: { width: '100%', background: COLORS.border, borderRadius: RADIUS.pill, height: 6, overflow: 'hidden' },
     progressBar: { background: COLORS.accent2, height: 6, borderRadius: RADIUS.pill, transition: 'width 500ms ease' },
@@ -954,6 +998,13 @@ const GoalAchievementWorkbook = () => {
   // ══════════ 사용 안내 팝업 (PART 7-8) ══════════
   const [showHelp, setShowHelp] = useState(true);
   const [showStepNav, setShowStepNav] = useState(false);
+
+  const goHome = () => {
+    setShowIntro(true);
+    setCurrentStep(0);
+    setCurrentPhase('round1');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
   const FirstVisitModal = ({ open, onClose, title, steps }) => {
     if (!open) return null;
     return (
@@ -1076,7 +1127,7 @@ const GoalAchievementWorkbook = () => {
                   }}>
                     {!g.label && (
                       <span style={{
-                        position: 'absolute', left: SPACING.base, top: 14,
+                        position: 'absolute', left: SPACING.base, top: '50%', transform: 'translateY(-50%)',
                         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                         width: 64, height: 24, borderRadius: 4,
                         background: isCurrent ? COLORS.accent : COLORS.bgAlt,
@@ -1097,18 +1148,16 @@ const GoalAchievementWorkbook = () => {
                         <span style={{ fontSize: FONT.size.sm, fontWeight: FONT.weight.semibold, color: COLORS.accent }}>{g.label}</span>
                       </div>
                     )}
-                    <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center', justifyContent: 'center', columnGap: 8, rowGap: 6 }}>
+                    <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'nowrap', gap: 8, alignItems: 'center', justifyContent: 'center', columnGap: 8, rowGap: 6, overflowX: 'auto' }}>
                       {g.items.map((it, ii) => {
                         const isCurrentItem = it.key === currentKey;
                         const link = it.directUrl ? { url: it.directUrl } : WORKBOOK_LINKS[it.key];
                         if (!link) return null;
                         const isMentoring = it.mentoring === true;
-                        const lineBreak = (isMentoring && ii > 0 && !g.items[ii - 1].mentoring);
                         const showSeparator = ii < g.items.length - 1 && (g.items[ii + 1].mentoring === isMentoring);
                         return (
                           <React.Fragment key={it.key || it.label}>
-                            {lineBreak && <span style={{ flexBasis: '100%', height: 0 }} />}
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap' }}>
                               {isCurrentItem ? (
                                 <span style={{ fontSize: FONT.size.sm, fontWeight: FONT.weight.bold, color: COLORS.accent }}>
                                   {it.label} <span style={{ fontSize: FONT.size.xs, color: COLORS.accent2, fontWeight: FONT.weight.semibold }}>(현재)</span>
@@ -1427,6 +1476,12 @@ const IntroFooterCopyright = () => (
 
 const IntroStickyHeader = ({ workbookKey, stepLabel, StepNavComponent }) => {
   const [showStepNav, setShowStepNav] = useState(false);
+  const goHome = () => {
+    setShowIntro(true);
+    setCurrentStep(0);
+    setCurrentPhase('round1');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
   return (
     <div style={{ position: 'sticky', top: 16, zIndex: 10, background: _INTRO_PAPER, borderRadius: 14, padding: 16, border: `1px solid ${_INTRO_MUTE}33`, marginBottom: 16, boxShadow: '0 2px 8px rgba(14, 39, 80, 0.12)' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
@@ -1443,13 +1498,6 @@ const IntroStickyHeader = ({ workbookKey, stepLabel, StepNavComponent }) => {
           </button>
           {StepNavComponent && <StepNavComponent open={showStepNav} onClose={() => setShowStepNav(false)} currentKey={workbookKey} />}
         </div>
-        <button
-          disabled
-          style={{ padding: '8px 14px', borderRadius: 8, border: 'none', fontSize: 14, fontWeight: 600, fontFamily: 'inherit', background: _INTRO_INK, color: '#fff', opacity: 0.4, cursor: 'not-allowed' }}
-          title="작성을 시작하면 활성화됩니다"
-        >
-          저장 (.docx)
-        </button>
       </div>
     </div>
   );
@@ -1551,17 +1599,13 @@ const IntroPage = ({
               </button>
               <StepNavigatorDropdown open={showStepNav} onClose={() => setShowStepNav(false)} currentKey="goalachievement" />
             </div>
+            <button onClick={goHome} title="처음 페이지로 이동 (작성 내용 유지)" style={{ background: 'transparent', color: '#6E7A8F', border: '1px solid #6E7A8F66', borderRadius: 10, padding: '0 14px', fontSize: 14, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'inherit', height: 36, display: 'inline-flex', alignItems: 'center' }}>처음으로</button>
+            <button onClick={clearSavedData} disabled={clearedFlash} style={{ background: confirmingClear ? '#C9A86A' : clearedFlash ? '#E8F5F0' : autoSaveStatus ? '#F0F9F5' : 'transparent', color: confirmingClear ? '#fff' : clearedFlash ? '#1FA47A' : autoSaveStatus ? '#1FA47A' : '#6E7A8F', border: confirmingClear ? '1px solid #C9A86A' : clearedFlash ? '1px solid #1FA47A' : autoSaveStatus ? '1px solid #1FA47A66' : '1px solid #6E7A8F66', borderRadius: 10, padding: '0 14px', fontSize: 11, fontWeight: 600, cursor: clearedFlash ? 'default' : 'pointer', whiteSpace: 'pre-line', fontFamily: 'inherit', lineHeight: 1.15, width: 140, height: 36, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }} title={clearedFlash ? '기록 삭제됨' : confirmingClear ? '한번 더 클릭하면 기록이 삭제됩니다' : '저장된 작성 내용 기록을 삭제 (페이지 유지)'}>
+              {confirmingClear ? '기록을 삭제\n하시겠습니까?' : clearedFlash ? '✓ 기록 삭제됨' : autoSaveStatus ? autoSaveStatus : '기록 삭제하고\n다시 작성'}
+            </button>
             <button onClick={savePartial} className="ce-save-btn" style={S.btnSaveHeader} title="지금까지 작성한 내용을 Word로 저장">
               저장 (.docx)
             </button>
-            <button onClick={clearSavedData} style={{ background: 'transparent', color: '#6E7A8F', border: '1px solid #6E7A8F44', borderRadius: 10, padding: '6px 12px', fontSize: 13, fontWeight: 500, cursor: 'pointer', marginLeft: 8, whiteSpace: 'nowrap' }} title="저장된 작성 내용을 모두 지우고 처음부터 다시 시작">
-              새로 시작
-            </button>
-            {autoSaveStatus && (
-              <span style={{ fontSize: 12, color: autoSaveStatus.startsWith('⚠') ? '#C9A86A' : '#1FA47A', whiteSpace: 'nowrap', fontWeight: 500, marginLeft: 8 }}>
-                {autoSaveStatus}
-              </span>
-            )}
           </div>
         </div>
 
@@ -1631,17 +1675,13 @@ const IntroPage = ({
               </button>
               <StepNavigatorDropdown open={showStepNav} onClose={() => setShowStepNav(false)} currentKey="goalachievement" />
             </div>
+            <button onClick={goHome} title="처음 페이지로 이동 (작성 내용 유지)" style={{ background: 'transparent', color: '#6E7A8F', border: '1px solid #6E7A8F66', borderRadius: 10, padding: '0 14px', fontSize: 14, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'inherit', height: 36, display: 'inline-flex', alignItems: 'center' }}>처음으로</button>
+            <button onClick={clearSavedData} disabled={clearedFlash} style={{ background: confirmingClear ? '#C9A86A' : clearedFlash ? '#E8F5F0' : autoSaveStatus ? '#F0F9F5' : 'transparent', color: confirmingClear ? '#fff' : clearedFlash ? '#1FA47A' : autoSaveStatus ? '#1FA47A' : '#6E7A8F', border: confirmingClear ? '1px solid #C9A86A' : clearedFlash ? '1px solid #1FA47A' : autoSaveStatus ? '1px solid #1FA47A66' : '1px solid #6E7A8F66', borderRadius: 10, padding: '0 14px', fontSize: 11, fontWeight: 600, cursor: clearedFlash ? 'default' : 'pointer', whiteSpace: 'pre-line', fontFamily: 'inherit', lineHeight: 1.15, width: 140, height: 36, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }} title={clearedFlash ? '기록 삭제됨' : confirmingClear ? '한번 더 클릭하면 기록이 삭제됩니다' : '저장된 작성 내용 기록을 삭제 (페이지 유지)'}>
+              {confirmingClear ? '기록을 삭제\n하시겠습니까?' : clearedFlash ? '✓ 기록 삭제됨' : autoSaveStatus ? autoSaveStatus : '기록 삭제하고\n다시 작성'}
+            </button>
             <button onClick={savePartial} className="ce-save-btn" style={S.btnSaveHeader} title="지금까지 작성한 내용을 Word로 저장">
               저장 (.docx)
             </button>
-            <button onClick={clearSavedData} style={{ background: 'transparent', color: '#6E7A8F', border: '1px solid #6E7A8F44', borderRadius: 10, padding: '6px 12px', fontSize: 13, fontWeight: 500, cursor: 'pointer', marginLeft: 8, whiteSpace: 'nowrap' }} title="저장된 작성 내용을 모두 지우고 처음부터 다시 시작">
-              새로 시작
-            </button>
-            {autoSaveStatus && (
-              <span style={{ fontSize: 12, color: autoSaveStatus.startsWith('⚠') ? '#C9A86A' : '#1FA47A', whiteSpace: 'nowrap', fontWeight: 500, marginLeft: 8 }}>
-                {autoSaveStatus}
-              </span>
-            )}
           </div>
         </div>
 
@@ -1878,17 +1918,13 @@ const IntroPage = ({
               <StepNavigatorDropdown open={showStepNav} onClose={() => setShowStepNav(false)} currentKey="goalachievement" />
             </div>
             {/* 우: 저장 버튼 */}
+            <button onClick={goHome} title="처음 페이지로 이동 (작성 내용 유지)" style={{ background: 'transparent', color: '#6E7A8F', border: '1px solid #6E7A8F66', borderRadius: 10, padding: '0 14px', fontSize: 14, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'inherit', height: 36, display: 'inline-flex', alignItems: 'center' }}>처음으로</button>
+            <button onClick={clearSavedData} disabled={clearedFlash} style={{ background: confirmingClear ? '#C9A86A' : clearedFlash ? '#E8F5F0' : autoSaveStatus ? '#F0F9F5' : 'transparent', color: confirmingClear ? '#fff' : clearedFlash ? '#1FA47A' : autoSaveStatus ? '#1FA47A' : '#6E7A8F', border: confirmingClear ? '1px solid #C9A86A' : clearedFlash ? '1px solid #1FA47A' : autoSaveStatus ? '1px solid #1FA47A66' : '1px solid #6E7A8F66', borderRadius: 10, padding: '0 14px', fontSize: 11, fontWeight: 600, cursor: clearedFlash ? 'default' : 'pointer', whiteSpace: 'pre-line', fontFamily: 'inherit', lineHeight: 1.15, width: 140, height: 36, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }} title={clearedFlash ? '기록 삭제됨' : confirmingClear ? '한번 더 클릭하면 기록이 삭제됩니다' : '저장된 작성 내용 기록을 삭제 (페이지 유지)'}>
+              {confirmingClear ? '기록을 삭제\n하시겠습니까?' : clearedFlash ? '✓ 기록 삭제됨' : autoSaveStatus ? autoSaveStatus : '기록 삭제하고\n다시 작성'}
+            </button>
             <button onClick={savePartial} className="ce-save-btn" style={S.btnSaveHeader} title="지금까지 작성한 내용을 Word로 저장">
               저장 (.docx)
             </button>
-            <button onClick={clearSavedData} style={{ background: 'transparent', color: '#6E7A8F', border: '1px solid #6E7A8F44', borderRadius: 10, padding: '6px 12px', fontSize: 13, fontWeight: 500, cursor: 'pointer', marginLeft: 8, whiteSpace: 'nowrap' }} title="저장된 작성 내용을 모두 지우고 처음부터 다시 시작">
-              새로 시작
-            </button>
-            {autoSaveStatus && (
-              <span style={{ fontSize: 12, color: autoSaveStatus.startsWith('⚠') ? '#C9A86A' : '#1FA47A', whiteSpace: 'nowrap', fontWeight: 500, marginLeft: 8 }}>
-                {autoSaveStatus}
-              </span>
-            )}
           </div>
           {/* 진행 바 */}
           <div style={{ display: 'flex', alignItems: 'center', gap: SPACING.sm }}>
