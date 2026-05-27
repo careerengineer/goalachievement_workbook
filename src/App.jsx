@@ -108,6 +108,28 @@ const BUTTON = {
 };
 
 
+function ToggleLink({ open, onToggle, label = '작성 예시', style }) {
+  return (
+    <button type="button" onClick={onToggle} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: COLORS.accent2, fontSize: FONT.size.sm, fontWeight: FONT.weight.semibold, fontFamily: 'inherit', whiteSpace: 'nowrap', ...style }}>
+      {open ? '숨기기 ▲' : `${label} 보기 ▼`}
+    </button>
+  );
+}
+function ExampleToggle({ text, label = '작성 예시' }) {
+  const [open, setOpen] = useState(false);
+  if (!text || !String(text).trim()) return null;
+  return (
+    <div style={{ marginBottom: SPACING.sm }}>
+      <ToggleLink open={open} onToggle={() => setOpen(o => !o)} label={label} />
+      {open && (
+        <p style={{ margin: '6px 0 0', padding: SPACING.sm, background: COLORS.yellowBg, borderLeft: `3px solid ${COLORS.yellow}`, borderRadius: RADIUS.base, fontSize: FONT.size.sm, color: COLORS.accent, lineHeight: FONT.lineHeight.base, whiteSpace: 'pre-wrap' }}>
+          {String(text).replace(/^예:\s*/, '')}
+        </p>
+      )}
+    </div>
+  );
+}
+
 const GoalAchievementWorkbook = () => {
   const [showIntro, setShowIntro] = useState(true);
   const [currentPhase, setCurrentPhase] = useState('round1');
@@ -2068,7 +2090,8 @@ const IntroPage = ({
                     </div>
                   )}
 
-                  <textarea className="ce-textarea" value={answers[q.id] || ''} onChange={e => handleAnswerChange(q.id, e.target.value)} rows={q.rows || 3} style={S.textarea} placeholder={q.placeholder} />
+                  <ExampleToggle text={q.placeholder} />
+                  <textarea className="ce-textarea" value={answers[q.id] || ''} onChange={e => handleAnswerChange(q.id, e.target.value)} rows={q.rows || 3} style={S.textarea} placeholder="" />
                   {currentPhase === 'round3' && (
                     <p style={{ fontSize: FONT.size.xs, color: COLORS.sub, textAlign: 'right', margin: '4px 0 0', fontVariantNumeric: 'tabular-nums' }}>
                       {(answers[q.id] || '').length}자
