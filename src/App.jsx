@@ -8,6 +8,10 @@ const MENTORING_URLS = {
   cover_letter:      'https://www.latpeed.com/products/fKnUV',  // 자소서 멘토링
   interview:         'https://www.latpeed.com/products/tZ5xw',  // 면접 멘토링
 };
+// 멘토링 프로세스 안내 (개별 워크북 전용)
+const MENTORING_PROCESS_URL = 'https://mentoringprocess.pages.dev/';
+const MENTORING_CTA_TEXT = '작성한 내용에 대한 채용담당자의 평가가 궁금하다면 1:1 멘토링을 받아보세요';
+const MENTORING_CTA_LINK = '멘토링 프로세스 안내 →';
 // ══════════════════════════════════════════════════════════════
 //  CareerEngineer 목표 수립 및 달성 워크북
 //  — 3라운드 체계적 작성 시스템
@@ -1434,6 +1438,31 @@ const IntroCTA = ({ onClick, children }) => (
   </button>
 );
 
+const MentoringCTA = () => (
+  <a
+    href={MENTORING_PROCESS_URL}
+    target="_blank"
+    rel="noopener noreferrer"
+    style={{
+      display: 'block',
+      background: '#FBFAF6',
+      border: `1px solid ${_INTRO_GOLD}66`,
+      borderLeft: `4px solid ${_INTRO_GOLD}`,
+      borderRadius: 10,
+      padding: 16,
+      marginTop: 16,
+      textDecoration: 'none',
+      color: _INTRO_INK,
+      fontFamily: _INTRO_FONT,
+    }}
+  >
+    <p style={{ fontSize: 14, color: _INTRO_INK, margin: 0, lineHeight: 1.6 }}>
+      {MENTORING_CTA_TEXT}.
+      {' '}<span style={{ color: _INTRO_INK, fontWeight: 700, textDecoration: 'underline' }}>{MENTORING_CTA_LINK}</span>
+    </p>
+  </a>
+);
+
 const IntroFlowCard = ({ flow, flowTitle }) => {
   if (!flow || flow.length === 0) return null;
   return (
@@ -1557,6 +1586,7 @@ const IntroPage = ({
         <IntroPrerequisites items={prerequisites} />
         {extraContent}
         <IntroCopyright />
+        <MentoringCTA />
         <IntroCTA onClick={onStart} />
       </div>
 
@@ -2082,6 +2112,14 @@ const IntroPage = ({
                           <div>
                             <p style={{ fontSize: FONT.size.sm, fontWeight: FONT.weight.semibold, color: COLORS.accent, margin: 0, marginBottom: 4 }}>그래도 어렵다면:</p>
                             <p style={{ fontSize: FONT.size.sm, color: COLORS.accent, margin: 0, lineHeight: FONT.lineHeight.base }}>{q.guide.ifStillDifficult}</p>
+                          </div>
+                        )}
+                        {q.guide.ifStillDifficult && (
+                          <div style={{ marginTop: 4, padding: '10px 12px', background: '#FBFAF6', border: `1px solid ${COLORS.accent2}55`, borderLeft: `3px solid ${COLORS.accent2}`, borderRadius: RADIUS.sm }}>
+                            <p style={{ fontSize: FONT.size.sm, color: COLORS.accent, margin: 0, lineHeight: FONT.lineHeight.base }}>
+                              {MENTORING_CTA_TEXT}.
+                              {' '}<a href={MENTORING_PROCESS_URL} target="_blank" rel="noopener noreferrer" style={{ color: COLORS.accent2, fontWeight: FONT.weight.semibold, textDecoration: 'underline' }}>{MENTORING_CTA_LINK}</a>
+                            </p>
                           </div>
                         )}
                         {/* 인라인 참고 워크북 (가이드 PART 7-15) */}
