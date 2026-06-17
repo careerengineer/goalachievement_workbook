@@ -42,8 +42,8 @@ const RADIUS = { sm: 6, base: 10, md: 14, lg: 20, pill: 999 };
 // ════════════════════════════════════════════════════════════════
 //  CareerEngineer 워크북 라이브러리 (URL은 나중에 일괄 적용)
 // ════════════════════════════════════════════════════════════════
-const WORKBOOK_LINKS = { career_roadmap: { label: 'STEP 0 · 취업준비 진단', url: 'https://www.latpeed.com/products/YPFjD' },
-  job_analysis:       { label: 'STEP 1 · 채용공고 및 직무 분석', url: 'https://www.latpeed.com/products/-3Wgm' },
+const WORKBOOK_LINKS = { career_roadmap: { label: 'STEP 0 · 취업 로드맵 진단', url: 'https://www.latpeed.com/products/YPFjD' },
+  job_analysis:       { label: 'STEP 1 · 채용공고 및 직무분석', url: 'https://www.latpeed.com/products/-3Wgm' },
   experience:         { label: 'STEP 2 · 경험 정리', url: 'https://www.latpeed.com/products/wDSaj' },
   motivation:         { label: 'STEP 4 · 지원동기 작성', url: 'https://www.latpeed.com/products/dfdMW' },
   jobcompetency:      { label: 'STEP 4 · 직무역량 작성', url: 'https://www.latpeed.com/products/dfdMW' },
@@ -1096,8 +1096,8 @@ const GoalAchievementWorkbook = () => {
     
     // 7단계 구조 - 자소서 5대 항목만 하위 항목 펼침, 나머지는 단일 링크
     const stepGroups = [
-      { step: '0', label: '취업준비 진단', key: 'career_roadmap' },
-      { step: '1', label: '채용공고 및 직무 분석', key: 'job_analysis' },
+      { step: '0', label: '취업 로드맵 진단', key: 'career_roadmap' },
+      { step: '1', label: '채용공고 및 직무분석', key: 'job_analysis' },
       { step: '2', label: '경험 정리', key: 'experience' },
       { step: '3', inline: true, label: '', items: [
         { key: 'resume', label: '이력서 작성' },
